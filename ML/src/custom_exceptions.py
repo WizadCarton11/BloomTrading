@@ -70,6 +70,13 @@ class ScraperError(CustomException):
     def __init__(self, message="Scraping failed", code=500, context=None):
         super().__init__(message, code, context)
 
+class ValueError(CustomException):
+    """
+    Exception for value-related errors.
+    """
+    def __init__(self, message="Value error", code=400, context=None):
+        super().__init__(message, code, context)
+
 # Utility function for raising exceptions dynamically
 def raise_custom_exception(exception_type, **kwargs):
     """

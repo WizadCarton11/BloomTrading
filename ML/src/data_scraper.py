@@ -24,10 +24,10 @@ class StockDataScraper:
             
             return historical_data
         except CustomException as e:
-            self.logger.error(f"An error occurred: {e}")
+            self.logger.error(f"A custom error occurred StockDataScraper->getStockDataByYfin: {e}")
             return None
         except Exception as e:
-            self.logger.error(f"An error occurred: {e}")
+            self.logger.error(f"An error occurred StockDataScraper->getStockDataByYfin: {e}")
             return None
 
 

@@ -1,6 +1,6 @@
 import sys
 import os
-from src.custom_exceptions import CustomException, DatabaseError, NotFoundError, ValidationError, raise_custom_exception
+from custom_exceptions import CustomException, DatabaseError, NotFoundError, ValidationError, raise_custom_exception
 
     
 

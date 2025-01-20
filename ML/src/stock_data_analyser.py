@@ -17,12 +17,11 @@ class StockDataAnalyser:
     def __init__(self, stock_symbol):
         self.stock_symbol = stock_symbol
         timestamp = datetime.datetime.now().strftime("%Y%m%d")
-        self.logger = CustomLogger("StockDataAnalyser", log_file=f'./src/Logs/stock_data_analyser/{timestamp}.log').get_logger()
+        self.logger = CustomLogger("StockDataAnalyser", log_file=f'./ML/src/Logs/stock_data_analyser/{timestamp}.log').get_logger()
         
     def fetch_and_plot_stock_data(self):
         try:
-            # Fetch stock data
-            print("Fetching stock data...")
+            
             self.logger.info(f"Fetching stock data for {self.stock_symbol}...")
             
             try:
@@ -41,13 +40,13 @@ class StockDataAnalyser:
             
             # self.plot_stock_data(historical_data)
             
-            historical_data.to_csv(f'./src/dataset/stock/{self.stock_symbol}_data.csv')
+            historical_data.to_csv(f'./ML/src/dataset/stock/{self.stock_symbol}_data.csv')
             self.logger.info(f"Saved stock data to CSV file: {self.stock_symbol}_data.csv")
             
             return historical_data
         
         except CustomException as e:
-            self.logger.error(f"A custom error occurred at StockDataAnalayser-fetch_and_plot_stock_data: {e}")
+            self.logger.error(f"A custom error occurred at StockDataAnalayser->fetch_and_plot_stock_data: {e}")
             return None
         except Exception as e:
             self.logger.error(f"An error occurred at StockDataAnalayser->fetch_and_plot_stock_data: {e}")
