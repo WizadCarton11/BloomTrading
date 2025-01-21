@@ -13,44 +13,41 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module='sklearn')
 
 class SelfLinearRegression(BaseModel):
-    def __init__(self, X, y, sample_weight=None, weighted=False,
-                  splitting="train-test", random_state=None, k=5):
+    def __init__(self):
         """
         Constructor for Linear Regression class
         :param name: Name of the model
-        :param X: Feature matrix
-        :param y: Target vector
         """
         super().__init__("Linear Regression")
+        self._coefficients = None
+        self._intercept = None
+        self._sample_weight = None
+        self.kfold_results = []
+
+    def fit(self, X, y, sample_weight=None, splitting="train-test", random_state=None, k=5):
+        """
+        Fit the model to the data
+        :param X: Feature matrix
+        :param y: Target vector
+        :param sample_weight: Weights for the samples
+        :param splitting: Splitting strategy ('train-test' or 'kfold')
+        :param random_state: Random seed
+        :param k: Number of folds for k-fold cross-validation
+        """
         try:
             if X.shape[0] != y.shape[0]:
                 raise ValueError("Number of samples in X and y must be equal")
             if y.shape[1] != 1:
                 raise ValueError("Only single-dimensional target vectors are supported")
-            # if splitting == "train-test":
-            #     X_train, X_test, y_train, y_test = SelfMetrics.train_test_split(X, y, test_size=0.2)
-            #     self._X_train = X_train
-            #     self._X_test = X_test
-            #     self._y_train = y_train
-            #     self._y_test = y_test
-            #     self._coefficients = None
-            #     self._intercept = None
-            #     self._sample_weight = sample_weight
+            
+            self._sample_weight = sample_weight
+
             if splitting == "train-test":
                 X_train, X_test, y_train, y_test = SelfMetrics.train_test_split(X, y, test_size=0.2, random_state=random_state)
-                self._X_train = X_train
-                self._X_test = X_test
-                self._y_train = y_train
-                self._y_test = y_test
-                self._coefficients = None
-                self._intercept = None
-                self._sample_weight = sample_weight
+                self._X_train, self._X_test = X_train, X_test
+                self._y_train, self._y_test = y_train, y_test
                 self._fit()
             elif splitting == "kfold":
-                self.kfold_results = []
-                self._coefficients = None
-                self._intercept = None
-                self._sample_weight = sample_weight
                 splits = SelfMetrics.kfold_split(X, y, k=k, random_state=random_state)
                 for fold_idx, (train_indices, test_indices) in enumerate(splits):
                     X_train, X_test = X[train_indices], X[test_indices]
@@ -69,8 +66,8 @@ class SelfLinearRegression(BaseModel):
             else:
                 raise ValueError("Invalid splitting method. Choose 'train-test' or 'kfold'.")
         except Exception as e:
-            print(f"Error in initializing model: {e}")
-
+            print(f"Error in fitting the model: {e}")
+    
     def _fit(self):
         """
         Fit the model to the data
@@ -207,10 +204,13 @@ if __name__ == "__main__":
     y = 4 + 3 * X1 + np.random.randn(100, 1) + 2 * X2
     X = np.hstack([X1, X2])
 
+    # Initialize the model
+    model = SelfLinearRegression()
+
     # Train the model with K-Fold cross-validation
-    model = SelfLinearRegression(X, y, splitting="kfold", k=5, random_state=42)
+    model.fit(X, y, splitting="kfold", k=5, random_state=42)
 
     # Print K-Fold results
     for result in model.kfold_results:
         print(f"Fold {result['fold']}: MSE = {result['mse']:.4f}, R² = {result['r2']:.4f}")
-    print(model.get_coefficients())
+    
