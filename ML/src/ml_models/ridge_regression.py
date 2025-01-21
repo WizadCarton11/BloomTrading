@@ -17,6 +17,9 @@ class SelfRidgeRegression(BaseModel):
         self._intercept = None
         self._sample_weight = None
 
+    def set_params(self, lambda_param= 1.0):
+        self.lambda_param=lambda_param
+
     def fit(self):
         """
         Fit the Ridge regression model to the data (with L2 regularization).
