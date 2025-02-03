@@ -40,7 +40,7 @@ class StockDataAnalyser:
             
             # self.plot_stock_data(historical_data)
             
-            historical_data.to_csv(f'./ML/src/dataset/stock/{self.stock_symbol}_data.csv')
+            historical_data.to_csv(f'{self.stock_symbol}_data.csv')
             self.logger.info(f"Saved stock data to CSV file: {self.stock_symbol}_data.csv")
             
             return historical_data

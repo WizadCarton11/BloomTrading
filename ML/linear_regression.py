@@ -22,6 +22,11 @@ class SelfLinearRegression(BaseModel):
         self._coefficients = None
         self._intercept = None
         self._sample_weight = None
+        self._X_test = None
+        self._X_train = None
+        self._y_test = None
+        self._y_train = None
+
         self.kfold_results = []
 
     def fit(self, X, y, sample_weight=None, splitting="train-test", random_state=None, k=5):
@@ -35,10 +40,10 @@ class SelfLinearRegression(BaseModel):
         :param k: Number of folds for k-fold cross-validation
         """
         try:
-            if X.shape[0] != y.shape[0]:
-                raise ValueError("Number of samples in X and y must be equal")
-            if y.shape[1] != 1:
-                raise ValueError("Only single-dimensional target vectors are supported")
+            # if X.shape[0] != y.shape[0]:
+            #     raise ValueError("Number of samples in X and y must be equal")
+            # if y.shape[1] != 1:
+            #     raise ValueError("Only single-dimensional target vectors are supported")
             
             self._sample_weight = sample_weight
 
@@ -46,6 +51,8 @@ class SelfLinearRegression(BaseModel):
                 X_train, X_test, y_train, y_test = SelfMetrics.train_test_split(X, y, test_size=0.2, random_state=random_state)
                 self._X_train, self._X_test = X_train, X_test
                 self._y_train, self._y_test = y_train, y_test
+                
+            
                 self._fit()
             elif splitting == "kfold":
                 splits = SelfMetrics.kfold_split(X, y, k=k, random_state=random_state)
@@ -137,7 +144,6 @@ class SelfLinearRegression(BaseModel):
             print("   ",self.get_coefficients())
             print(f"  Mean Squared Error: {mse_custom:.4f}")
             print(f"  R² Score: {r2_custom:.4f}")
-            
 
             if compare_with_standard:
                 # Compare with scikit-learn's Linear Regression
@@ -151,6 +157,7 @@ class SelfLinearRegression(BaseModel):
                 print(sklearn_model.coef_, sklearn_model.intercept_)
                 print(f"  Mean Squared Error: {mse_sklearn:.4f}")
                 print(f"  R² Score: {r2_sklearn:.4f}")
+            return self._X_test, self._y_test, y_pred
         except Exception as e:
             print(f"Error in calculating scores: {e}")
 
