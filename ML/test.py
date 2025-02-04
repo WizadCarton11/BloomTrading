@@ -8,7 +8,7 @@ try:
     # Simulate a resource not found error
     raise NotFoundError(resource="User", identifier=123)
 except CustomException as e:
-    print(f"Caught Exception: {e}")
+    print(f"Caught Exception: {e}") 
 
 try:
     # Dynamically raise a database error
