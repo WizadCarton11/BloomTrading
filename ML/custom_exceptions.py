@@ -77,6 +77,12 @@ class ValueError(CustomException):
     def __init__(self, message="Value error", code=400, context=None):
         super().__init__(message, code, context)
 
+class ParameterError(CustomException):
+    """
+    Exception for parameter-related errors.
+    """
+    def __init__(self, message="Parameter error", code=400, context=None):
+        super().__init__(message, code, context)
 # Utility function for raising exceptions dynamically
 def raise_custom_exception(exception_type, **kwargs):
     """

@@ -1,8 +1,8 @@
 import numpy as np
-import logging
 from custom_exceptions import ValidationError, CustomException
-from custom_logger import CustomLogger  # Assuming you have a logger setup
-
+from custom_logger import CustomLogger
+from type_enforce import enforce_types
+from typeguard import typechecked, CollectionCheckStrategy
 # Initialize logger
 logger = CustomLogger(name="MathOpsLogger", log_file="./Logs/math_ops.log").get_logger()
 
@@ -10,8 +10,11 @@ class MathOps:
     """
     Class for mathematical operations
     """
-
+    def __init__(self):
+        pass
+    
     @staticmethod
+    @typechecked(collection_check_strategy=CollectionCheckStrategy.ALL_ITEMS)
     def dot_product(matrix_1: np.ndarray, matrix_2: np.ndarray) -> np.ndarray:
         """
         Calculate the dot product of two matrices.
