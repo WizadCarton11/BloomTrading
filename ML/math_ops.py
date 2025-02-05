@@ -34,7 +34,7 @@ class MathOps:
                 raise ValidationError(f"Incompatible dimensions for dot product: {matrix_1.shape} and {matrix_2.shape}")
 
             result = np.dot(matrix_1, matrix_2)
-            logger.info(f"Dot product computed successfully for shapes {matrix_1.shape} and {matrix_2.shape}")
+            # logger.info(f"Dot product computed successfully for shapes {matrix_1.shape} and {matrix_2.shape}")
             return result
 
         except ValidationError as ve:

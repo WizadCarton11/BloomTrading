@@ -7,8 +7,24 @@ from type_enforce import *
 from typeguard import typechecked, CollectionCheckStrategy
 from math_ops import MathOps
 from activation_functions import ActivationClass
+
+"""
+Format of weights and biases:
+Weights: 
+    [
+        [w11, w12, w13, w14],
+        [w21, w22, w23, w24],
+    ]
+Biases:
+    [
+        [b1, b2, b3, b4]
+    ]
+"""
+
+
 class Layer:
-    def __init__(self, activation_function: str = "relu", alpha: float = 0.01):
+    def __init__(self, activation_function: str = "relu", alpha: float = 0.01,
+                  input_shape: int=4, number_of_neurons:int =4):
         """
         Initializes the layer.
 
@@ -26,7 +42,9 @@ class Layer:
         self._bias = None
         self._output = None
         self._input = None
+        self._del_w=None
         self._math_ops = MathOps()
+        self.assign_weights(input_shape, number_of_neurons=number_of_neurons)
 
     @typechecked(collection_check_strategy=CollectionCheckStrategy.ALL_ITEMS)
     def assign_weights(self, input_shape: int, number_of_neurons: int, random_seed: Union[int, None] = 42) -> None:
@@ -51,7 +69,8 @@ class Layer:
             
             np.random.seed(random_seed)
             self._weights = np.random.randn(input_shape, number_of_neurons)
-            self._bias = np.zeros(number_of_neurons)
+            self._bias = np.random.randn(1,number_of_neurons)
+            
         
         except CustomException as cs:
             self.logger.error(f"A custom error occurred at Layer->assign_weights: {cs}")
@@ -78,18 +97,23 @@ class Layer:
         """
         try:
             self._input = inputs
+            print("input",self._input)
+            print("weights",self._weights)
+            print("bias",self._bias)
+            print("dot product",self._math_ops.dot_product(self._input, self._weights))
+            print("Added bias",self._math_ops.dot_product(self._input, self._weights) + (self._bias))
             dt_product = self._math_ops.dot_product(self._input, self._weights) + (self._bias)
             if self._activation_function_type == "relu":
                 self._output = self._activation_class.relu_activation_function(dt_product)
-            if self._activation_function_type == "softmax":
+            elif self._activation_function_type == "softmax":
                 self._output = self._activation_class.soft_max_activation_function(dt_product)
-            if self._activation_function_type == "sigmoid":
+            elif self._activation_function_type == "sigmoid":
                 self._output = self._activation_class.sigmoid_activation_function(dt_product)
-            if self._activation_function_type == "tanh":
+            elif self._activation_function_type == "tanh":
                 self._output = self._activation_class.tanh_activation_function(dt_product)
-            if self._activation_function_type == "leaky_relu":
+            elif self._activation_function_type == "leaky_relu":
                 self._output = self._activation_class.leaky_relu_activation_function(dt_product, alpha=(self._alpha if self._alpha is not None else 0.01))
-            if self._activation_function_type == "elu":
+            elif self._activation_function_type == "elu":
                 self._output = self._activation_class.elu_activation_function(dt_product, alpha=(self._alpha if self._alpha is not None else 1.0))
             else:
                 raise CustomException(f"Activation function {self._activation_function_type} is not supported.")
@@ -101,6 +125,39 @@ class Layer:
             self.logger.error(f"An error occurred at Layer->forward: {e}")
             raise e
 
+    @typechecked(collection_check_strategy=CollectionCheckStrategy.ALL_ITEMS)
+    def update_weights_and_biases(self, learning_rate: float, del_values: np.ndarray):
+        try:
+            rated_del = learning_rate * del_values  # Scale the gradient
+            print("rated_del", rated_del)
+
+            # Corrected weight update formula
+            del_w = self._math_ops.dot_product(self._input.T, rated_del)  # (input_dim, num_neurons)
+
+            # Correct shape check
+            if del_w.shape != self._weights.shape:
+                raise ValueError(f"Shape mismatch: del_w {del_w.shape} and weights {self._weights.shape}")
+
+            # Update weights
+            self._del_w = del_w
+            self._weights += del_w  # Gradient Descent update
+
+            return self._del_w
+
+        except CustomException as ce:
+            self.logger.error(f"A custom error occurred at Layer->update_weights_and_biases: {ce}")
+            raise ce
+        except Exception as e:
+            self.logger.error(f"An error occurred at Layer->update_weights_and_biases: {e}")
+            raise e
+
+
+    def get_output(self)->np.ndarray:
+        return self._output
+
+    def get_del_w(self)->np.ndarray:
+        return self._del_w
+    
     def getWeights(self)->np.ndarray:
         """
         Retrieve the weights of the layer.
@@ -110,13 +167,22 @@ class Layer:
         """
         return self._weights
 if __name__ == "__main__":
-    layer = Layer()
     try:
-        # This will raise a ParameterError since input_shape is a tuple, not an integer
-        layer.assign_weights(input_shape=4, number_of_neurons=12)
-        input=np.array([[1,2,3,4]])
-        print(layer.getWeights())
-        output=layer.forward(input)
-        print(output)
+        layer = Layer()
+        # Initialize weights
+        layer.assign_weights(input_shape=2, number_of_neurons=3)
+
+        # Forward pass test
+        input_data = np.array([[1., 2.]])  # Example input
+        output = layer.forward(input_data)
+        print("Forward Output:", output)
+
+        # Backward pass test (weight update)
+        dummy_gradient = np.array([[0.1, 0.2, -0.1]])  # Example gradient from next layer
+        learning_rate = 0.01
+        updated_weights = layer.update_weights_and_biases(learning_rate, dummy_gradient)
+
+        print("Updated Weights After Backward Pass:", layer.getWeights())
+
     except CustomException as ce:
         print(f"Caught exception: {ce}")
