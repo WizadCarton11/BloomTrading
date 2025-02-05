@@ -97,11 +97,6 @@ class Layer:
         """
         try:
             self._input = inputs
-            print("input",self._input)
-            print("weights",self._weights)
-            print("bias",self._bias)
-            print("dot product",self._math_ops.dot_product(self._input, self._weights))
-            print("Added bias",self._math_ops.dot_product(self._input, self._weights) + (self._bias))
             dt_product = self._math_ops.dot_product(self._input, self._weights) + (self._bias)
             if self._activation_function_type == "relu":
                 self._output = self._activation_class.relu_activation_function(dt_product)
@@ -129,8 +124,7 @@ class Layer:
     def update_weights_and_biases(self, learning_rate: float, del_values: np.ndarray):
         try:
             rated_del = learning_rate * del_values  # Scale the gradient
-            print("rated_del", rated_del)
-
+            
             # Corrected weight update formula
             del_w = self._math_ops.dot_product(self._input.T, rated_del)  # (input_dim, num_neurons)
 
