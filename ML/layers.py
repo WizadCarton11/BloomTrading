@@ -23,27 +23,36 @@ Biases:
 
 
 class Layer:
-    def __init__(self, activation_function: str = "relu", alpha: float = 0.01,
-                  input_shape: int=4, number_of_neurons:int =4):
+    def __init__(self, input_shape: int, number_of_neurons: int,
+                  activation_function: str = "relu", alpha: float = 0.01
+                  ) -> None:
         """
         Initializes the layer.
 
         Initializes the logger, and sets the weights, bias, output, and input to None.
 
+        Args:
+            input_shape (int): The shape of the layer's input.
+            number_of_neurons (int): The number of neurons in the layer.
+            activation_function (str, optional): The activation function to use. Defaults to "relu".
+            alpha (float, optional): The alpha value to use for leaky ReLU. Defaults to 0.01.
         """
+        if input_shape is None or number_of_neurons is None:
+            raise ValueError("input_shape and number_of_neurons must not be None.")
+        
         self.logger = CustomLogger(name="LayerLogger", 
                                    log_file="./Logs/layers.log").get_logger()
         if activation_function not in ["relu"]:
             raise CustomException(f"Activation function {activation_function} is not supported.")
-        self._activation_function_type=activation_function
-        self._activation_class= ActivationClass()
-        self._alpha=alpha
-        self._weights = None
-        self._bias = None
-        self._output = None
-        self._input = None
-        self._del_w=None
-        self._math_ops = MathOps()
+        self._activation_function_type: str = activation_function
+        self._activation_class: ActivationClass = ActivationClass()
+        self._alpha: float = alpha
+        self._weights: np.ndarray = None
+        self._bias: np.ndarray = None
+        self._output: np.ndarray = None
+        self._input: np.ndarray = None
+        self._del_w: np.ndarray = None
+        self._math_ops: MathOps = MathOps()
         self.assign_weights(input_shape, number_of_neurons=number_of_neurons)
 
     @typechecked(collection_check_strategy=CollectionCheckStrategy.ALL_ITEMS)
@@ -122,6 +131,21 @@ class Layer:
 
     @typechecked(collection_check_strategy=CollectionCheckStrategy.ALL_ITEMS)
     def update_weights_and_biases(self, learning_rate: float, del_values: np.ndarray):
+        """
+        Updates the weights and biases of the layer given the error gradient and learning rate.
+
+        Args:
+            learning_rate (float): The learning rate to use for gradient descent.
+            del_values (np.ndarray): The error gradient to use for gradient descent.
+
+        Returns:
+            np.ndarray: The updated weights.
+
+        Raises:
+            CustomException: If the shape of the error gradient does not match the shape of the weights.
+            Exception: If any unexpected error occurs.
+        """
+
         try:
             rated_del = learning_rate * del_values  # Scale the gradient
             
@@ -147,9 +171,22 @@ class Layer:
 
 
     def get_output(self)->np.ndarray:
+        """
+        Retrieve the output of the layer.
+
+        Returns:
+            np.ndarray: The output of the layer.
+        """
         return self._output
 
     def get_del_w(self)->np.ndarray:
+        
+        """
+        Retrieve the gradient of the loss with respect to the weights of the layer.
+
+        Returns:
+            np.ndarray: The gradient of the loss with respect to the weights of the layer as a NumPy array.
+        """
         return self._del_w
     
     def getWeights(self)->np.ndarray:
@@ -162,9 +199,9 @@ class Layer:
         return self._weights
 if __name__ == "__main__":
     try:
-        layer = Layer()
+        layer = Layer(input_shape=2, number_of_neurons=3, activation_function="relu")
         # Initialize weights
-        layer.assign_weights(input_shape=2, number_of_neurons=3)
+        
 
         # Forward pass test
         input_data = np.array([[1., 2.]])  # Example input
