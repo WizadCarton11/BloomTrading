@@ -13,36 +13,24 @@ from math_ops import MathOps
 from metrics import SelfMetrics
 import matplotlib.pyplot as plt
 
-# To be erased ONLY FOR DEV TESTING
-from sklearn.datasets import make_regression
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-
-class AnnClass(BaseModel):
-
-    def __init__(self, mean: float=0.0, std: float=1.0):
-        super().__init__("Artificial Neural Network")
+class ANNModel(BaseModel):
+    def __init__(self):
+        super().__init__("Artificial Neural  Network")
         self._logger= CustomLogger(name="AnnClassLogger", 
                                    log_file="./Logs/layers.log").get_logger()
         self._layers: List[Layer] = []
-        self._loss_layer=None
-        self._metric_layer: List[Layer] =[]
+        self._loss_layer: LossLayer = None
+        self._metric_layer: LossLayer =[]
         self._math_ops=MathOps()
         self._learning_rate=None
-        self._mean=mean
-        self._std=std
-
-    # @typechecked(collection_check_strategy=CollectionCheckStrategy.ALL_ITEMS)
+    
     def add_layer(self, number_of_neurons: int, input_shape: int=1,
-                  activation_function: str = "relu", alpha: float =0.01, n:int=1) -> None:
+                  activation_function: str = "sigmoid", alpha: float =0.01, **kwargs) -> None:
         try:
             if len(self._layers)!=0:
                 input_shape: int=self._layers[-1].get_number_of_neurons()
                 
-            new_layer: Layer= Layer(number_of_neurons=number_of_neurons,
-                                    input_shape=input_shape,
-                                    activation_function=activation_function,
-                                    alpha=alpha, n=n, mean=self._mean, std=self._std)
+            new_layer: Layer= Layer(input_size=input_shape, number_of_neurons=number_of_neurons, activation_function_type=activation_function, alpha=alpha)
             self._layers.append(new_layer)
         except CustomException as e:
             self._logger.error(f"Error in add_layer: {e}")
@@ -51,187 +39,131 @@ class AnnClass(BaseModel):
             self._logger.critical(f"Crititcal Error in add_layer: {e}")
             raise_custom_exception(CustomException, message=f"Error in add_layer: {e}")
 
-    # @typechecked(collection_check_strategy=CollectionCheckStrategy.ALL_ITEMS)
-    def compile_model(self, optimizer: str = "RMSprop", loss: str="mse", metrics: List[str]=["mae"]):
+    def _forward_propagation(self, X: np.ndarray) -> np.ndarray:
         try:
-            loss_layer=LossLayer(type_of_loss=loss)
-            self._loss_layer=loss_layer
-            if len(metrics)==0:
-                metric_layer=LossLayer(type_of_loss="mae")
-                self._metric_layer.append(metric_layer)
-            else:
-                for metric_type in metrics:
-                    if metric_type not in ["mse", "mae", "msle"]:
-                        raise_custom_exception(CustomException, message=f"Metric type of {metric_type} does not exist")
-                    metric_layer=LossLayer(type_of_loss=metric_type)
-                    self._metric_layer.append(metric_layer)
-        except CustomException as cs:
-            self._logger.error(f"Error in compiling model: {cs}")
-            return cs
+            for layer in self._layers:
+                X = layer.forward(X)
+            return X
+        except CustomException as e:
+            self._logger.error(f"Error in forward propagation: {e}")
+            raise_custom_exception(CustomException, message=f"Error in forward propagation: {e}")
         except Exception as e:
-            self._logger.critical(f"Critical error in compiling mode: {e}")
-            return e
-    
-    # @typechecked(collection_check_strategy=CollectionCheckStrategy.ALL_ITEMS)
-    def forward(self, input: np.float64):
+            self._logger.critical(f"Critical error in forward propagation: {e}")
+            raise_custom_exception(CustomException, message=f"Error in forward propagation: {e}")
+
+    def _back_propagation(self, d_output: np.ndarray, learning_rate: float) -> None:    
         try:
-            layer_input=input
-            for single_layer in self._layers:
-                layer_output=single_layer.forward(inputs=layer_input)
-                layer_input=layer_output
+            for layer in reversed(self._layers):
+                d_output = layer.backward(d_output=d_output, learning_rate=learning_rate)
+        except CustomException as e:
+            self._logger.error(f"Error in back propagation: {e}")
+            raise_custom_exception(CustomException, message=f"Error in back propagation: {e}")
+        except Exception as e:
+            self._logger.critical(f"Critical error in back propagation: {e}")
+            raise_custom_exception(CustomException, message=f"Error in back propagation: {e}")
+
+    def train(self, X, Y, epochs: int=1000, learning_rate: float=0.001):
+        losses = []
+        for epoch in range(epochs):
+            output = self._forward_propagation(X)
             
-            return layer_output
-        except CustomException as cs:
-            self._logger.error(f"Error in forward: {cs}")
-            raise_custom_exception(CustomException, message=f"Error in forward: {cs}")
-        except Exception as e:
-            self._logger.critical(f"Critical error in forward: {e}")
-            raise_custom_exception(CustomException, message=f"Error in forward: {e}")
+            loss = self._loss_layer.forward(y_true=Y, y_pred=output)
+            losses.append(loss)
+            d_output = self._loss_layer.derivative_loss(y_true=Y, y_pred=output)
+
+            self._back_propagation(d_output=d_output, learning_rate=learning_rate)
+            if epoch % 500 == 0:
+                print(f"Epoch {epoch}, Loss: {loss:.6f}, metric: {self._metric_layer.forward(y_true=Y, y_pred=output):.6f}")
+
+        return losses
     
-    # @typechecked(collection_check_strategy=CollectionCheckStrategy.ALL_ITEMS)
-    def fit(self, X_train: np.float64, y_train: np.float64, learning_rate: float, epochs: int = 100):
+    def compile(self, loss: str="mse", metric: str="mse", learning_rate: float=0.001):
         try:
-            self._learning_rate=learning_rate
-            for epoch in range(epochs):
-                # Forward pass
-                # for i in range(0, len(X_train)):
-                #     x_input=X_train[i]
-                #     y_input=y_train[i]
-                y_pred = self.forward(X_train)
-
-                loss= self._loss_layer.forward(y_true=y_train, y_pred=y_pred)
-                loss, loss_derivative= self._loss_layer.get_output()
-                print(f"Epoch: {epoch} / {epochs}; loss: {loss}")
-                if epoch%10==0:
-                    pass
-                
-                for idx, single_layer in enumerate(reversed(self._layers)):
-                    if idx==0:
-                        del_activation_function=single_layer.get_del_activation_function()
-                        loss_derivative_times_del_activation_function= loss_derivative * del_activation_function
-                        _= single_layer.update_weights_and_biases(learning_rate=learning_rate,
-                        del_values=loss_derivative_times_del_activation_function)
-                    else:
-                        del_activation_function=single_layer.get_del_activation_function()
-                        previous_layer=self._layers[len(self._layers)-idx]
-                        previous_layer_del_values=previous_layer.get_del_w_times_weight()
-                        del_activation_function_times_previous_layer_del= del_activation_function * previous_layer_del_values
-                        _= single_layer.update_weights_and_biases(learning_rate=learning_rate,
-                        del_values=del_activation_function_times_previous_layer_del)
-
-                        
-
-                
-                
-        except CustomException as cs:
-            self._logger.error(f"Error in fit: {cs}")
-            raise_custom_exception(CustomException, message=f"Error in fit: {cs}")
+            self._loss_layer = LossLayer(loss_type=loss)
+            self._metric_layer = LossLayer(loss_type=metric)
+            self._learning_rate = learning_rate
+        except CustomException as e:
+            self._logger.error(f"Error in compile: {e}")
+            raise_custom_exception(CustomException, message=f"Error in compile: {e}")
         except Exception as e:
-            self._logger.critical(f"Critical error in fit: {e}")
-            raise_custom_exception(CustomException, message=f"Error in fit: {e}")
-
+            self._logger.critical(f"Critical Error in compile: {e}")
+            raise_custom_exception(CustomException, message=f"Error in compile: {e}")
     
-    # @typechecked
-    def predict(self, X_test: np.float64) -> np.float64:
-        try:
-            return self.forward(X_test)  # Just perform a forward pass
-        except CustomException as cs:
-            self._logger.error(f"Error in predict: {cs}")
-            raise_custom_exception(CustomException, message=f"Error in predict: {cs}")
-        except Exception as e:
-            self._logger.critical(f"Critical error in predict: {e}")
-            raise_custom_exception(CustomException, message=f"Error in predict: {e}")
-
-import matplotlib.pyplot as plt
-
+    def predict(self, X):
+        output = X
+        for layer in self._layers:
+            output = layer.forward(output)
+        return output
+    
+    def evaluate(self, X, Y):
+        output = self.predict(X)
+        loss = self._loss_layer.forward(y_true=Y, y_pred=output)
+        metric = self._metric_layer.forward(y_true=Y, y_pred=output)
+        return loss, metric
+    
+    def get_weights_biases(self):
+        weights = []
+        biases = []
+        for layer in self._layers:
+            wts, b= layer.get_weights_and_biases()
+            weights.append(wts)
+            biases.append(b)
+        return weights, biases
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.datasets import make_regression
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
-def main1():
-    # Create an instance of AnnClass
-    model = AnnClass()
-    
 
-    # model.add_layer(number_of_neurons=4, input_shape=2, activation_function="relu")
-    # model.add_layer(number_of_neurons=2, activation_function="relu")
-    X, y = make_regression(n_samples=100, n_features=2, noise=0.1)
-    y = np.expand_dims(y, axis=1)  # Reshape y to match expected input (100,1)
+# Generate synthetic regression data
+X, Y = make_regression(n_samples=1000, n_features=1, noise=15, random_state=420)
+Y = Y.reshape(-1, 1)  # Reshape to match neural network output shape
 
-    # Split into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    model.add_layer(number_of_neurons=16, input_shape=2, activation_function="relu", alpha=0.01)
-    model.add_layer(number_of_neurons=32, activation_function="sigmoid", alpha=0.01)
-    model.add_layer(number_of_neurons=1, activation_function="sigmoid", n=2)
-    # Compile the model
-    model.compile_model(loss="mse", metrics=["mae"])
+# Normalize data
+scaler_X = MinMaxScaler()
+scaler_Y = MinMaxScaler()
+X_scaled = scaler_X.fit_transform(X)
+Y_scaled = scaler_Y.fit_transform(Y)
 
-   
+# Train-test split
+X_train, X_test, Y_train, Y_test = train_test_split(X_scaled, Y_scaled, test_size=0.2, random_state=42)
 
-    # Train the model
-    model.fit(X_train=np.float64([[0.35, 0.9], [0.2, 0.6]]), y_train=np.float64([[0.5], [0.8]]), epochs=100,
-               learning_rate=100)
+# ANN model with a simple architecture
+model = ANNModel()
+model.add_layer(number_of_neurons=64, input_shape=X_train.shape[1], activation_function="relu")
+model.add_layer(number_of_neurons=32, activation_function="relu")
+model.add_layer(number_of_neurons=1, activation_function="linear")
+model.compile(loss="mse", metric="mae", learning_rate=0.001)
 
-    # # Make predictions
-    # predictions = model.predict(X_test)
+# Train the model
+losses = model.train(X_train, Y_train)
 
-    # # Plot actual vs predicted values
-    # plt.figure(figsize=(8, 6))
-    # plt.scatter(y_test, predictions, color='blue', label="Predicted vs Actual")
-    # plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], color='red', linestyle='dashed', label="Perfect Prediction")
-    # plt.xlabel("Actual Values")
-    # plt.ylabel("Predicted Values")
-    # plt.title("Actual vs Predicted Values")
-    # plt.legend()
-    # plt.show()
-def main():
-    # Generate synthetic regression data
-    # Generate dataset
-    # X, y = make_regression(n_samples=1000,n_features=1, noise=0.1)
-    # y = np.expand_dims(y, axis=1)  # Reshape y to match expected input (100,1)
+# Predictions on train and test sets
+Y_pred_train = model.predict(X_train)
+Y_pred_test = model.predict(X_test)
 
-    # # Split into training and testing sets
-    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    # mean_of_X_train=np.mean(X_train)
-    # std_of_X_train=np.std(X_train)
-    # # Assuming AnnClass is defined elsewhere
-    # plt.figure(figsize=(8, 6))
-    # plt.scatter(X_train, y_train, color='blue', label="Training Data")
-    model = AnnClass(mean=0, std=1)
+# Rescale predictions back to the original scale
+Y_pred_train_rescaled = scaler_Y.inverse_transform(Y_pred_train)
+Y_pred_test_rescaled = scaler_Y.inverse_transform(Y_pred_test)
+Y_train_rescaled = scaler_Y.inverse_transform(Y_train)
+Y_test_rescaled = scaler_Y.inverse_transform(Y_test)
 
-    # Add layers
-    # model.add_layer(number_of_neurons=64, input_shape=4, activation_function="sigmoid")
-    # model.add_layer(number_of_neurons=32, activation_function="sigmoid")
-    # model.add_layer(number_of_neurons=1, activation_function="linear", alpha=0.01)
-    model.add_layer(number_of_neurons=64
-                    , input_shape=2, activation_function="sigmoid", alpha=0.01, n=1)
-    model.add_layer(number_of_neurons=32,
-                     activation_function="sigmoid", alpha=0.01, n=2)
-    model.add_layer(number_of_neurons=1, activation_function="sigmoid",
-                     alpha=0.1, n=3)
-    # Compile the model
-    model.compile_model(loss="mse", metrics=["mae"])
+# Plot Loss Curve
+plt.figure(figsize=(10, 4))
+plt.plot(losses, label="Training Loss")
+plt.xlabel("Epochs")
+plt.ylabel("MSE Loss")
+plt.title("Training Loss Curve")
+plt.legend()
+plt.show()
 
-    # Train the model
-    # model.fit(X_train, y_train, epochs=100, learning_rate=0.01)
-    model.fit(X_train=np.float64([[0, 0], [0, 1], [1, 0], [1, 1]
-    ]), y_train=np.float64([[0], [1], [1], [0]
-    ]), epochs=9000,
-               learning_rate=0.02)
-    # Make predictions
-    print(model.predict(np.array([[0, 0], [0, 1], [1, 0], [1, 1]])))
-    # predictions = model.predict(X_test)
-
-    # # Plot actual vs predicted values
-    # plt.scatter(X_test, y_test, color='blue', label="Actual Values")
-    # plt.scatter(X_test, predictions, color='red', label="Predicted Values")
-    # plt.xlabel("X Test")
-    # plt.ylabel("Y Values")
-    # plt.title("Actual vs Predicted Values")
-    # plt.legend()
-    # plt.show()
-
-
-if __name__ == "__main__":
-    main()
-
+# Plot Predictions vs Ground Truth
+plt.figure(figsize=(10, 6))
+plt.scatter(scaler_X.inverse_transform(X_train), Y_train_rescaled, label="Train Data", color="blue")
+plt.scatter(scaler_X.inverse_transform(X_test), Y_test_rescaled, label="Test Data", color="red")
+plt.scatter(scaler_X.inverse_transform(X_train), Y_pred_train_rescaled, label="Model Predictions", color="green")
+plt.xlabel("X Feature")
+plt.ylabel("Y Target")
+plt.title("Regression Predictions vs Ground Truth")
+plt.legend()
+plt.show()
