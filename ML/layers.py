@@ -4,7 +4,7 @@ from custom_exceptions import ValidationError, CustomException, ValueError, rais
 from typing import Union
 from custom_logger import CustomLogger
 from type_enforce import *
-from typeguard import typechecked, CollectionCheckStrategy
+# from typeguard import typechecked, CollectionCheckStrategy
 from math_ops import MathOps
 from activation_functions import ActivationClass
 

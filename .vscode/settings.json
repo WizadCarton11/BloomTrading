@@ -3,5 +3,6 @@
         "ML"
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "peacock.color": "#42b883"
 }

@@ -5,7 +5,7 @@ from base_model import BaseModel
 from custom_exceptions import ValidationError, CustomException, ValueError, raise_custom_exception
 from typing import Union, List
 from custom_logger import CustomLogger
-from typeguard import typechecked, CollectionCheckStrategy
+# from typeguard import typechecked, CollectionCheckStrategy
 import numpy as np
 import math
 import random
