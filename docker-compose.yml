@@ -14,17 +14,17 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  fastapi_app:
-    build: AI/langchain_agent
-    container_name: fastapi_server
-    restart: always
-    ports:
-      - "8000:8000"
-    environment:
-      MONGODB_ATLAS_CLUSTER_URI: ${MONGODB_ATLAS_CLUSTER_URI}
-      GROQ_API_KEY: ${GROQ_API_KEY}
-    depends_on:
-      - postgres
+  # fastapi_app:
+  #   build: AI/langchain_agent
+  #   container_name: fastapi_server
+  #   restart: always
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     MONGODB_ATLAS_CLUSTER_URI: ${MONGODB_ATLAS_CLUSTER_URI}
+  #     GROQ_API_KEY: ${GROQ_API_KEY}
+  #   depends_on:
+  #     - postgres
 
 
 
