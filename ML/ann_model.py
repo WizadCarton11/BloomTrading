@@ -133,61 +133,61 @@ class ANNModel(BaseModel):
             weights.append(wts)
             biases.append(b)
         return weights, biases
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.datasets import make_regression
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.model_selection import train_test_split
+# import numpy as np
+# import matplotlib.pyplot as plt
+# from sklearn.datasets import make_regression
+# from sklearn.preprocessing import MinMaxScaler
+# from sklearn.model_selection import train_test_split
 
-# Generate synthetic regression data
-X, Y = make_regression(n_samples=1000, n_features=1, noise=15, random_state=420)
-Y = Y.reshape(-1, 1)  # Reshape to match neural network output shape
+# # Generate synthetic regression data
+# X, Y = make_regression(n_samples=1000, n_features=1, noise=15, random_state=420)
+# Y = Y.reshape(-1, 1)  # Reshape to match neural network output shape
 
-# Normalize data
-scaler_X = MinMaxScaler()
-scaler_Y = MinMaxScaler()
-X_scaled = scaler_X.fit_transform(X)
-Y_scaled = scaler_Y.fit_transform(Y)
+# # Normalize data
+# scaler_X = MinMaxScaler()
+# scaler_Y = MinMaxScaler()
+# X_scaled = scaler_X.fit_transform(X)
+# Y_scaled = scaler_Y.fit_transform(Y)
 
-# Train-test split
-X_train, X_test, Y_train, Y_test = train_test_split(X_scaled, Y_scaled, test_size=0.2, random_state=42)
+# # Train-test split
+# X_train, X_test, Y_train, Y_test = train_test_split(X_scaled, Y_scaled, test_size=0.2, random_state=42)
 
-# ANN model with a simple architecture
-model = ANNModel()
-model.add_layer(number_of_neurons=64, input_shape=X_train.shape[1], activation_function="relu")
-model.add_layer(number_of_neurons=32, activation_function="relu")
-model.add_layer(number_of_neurons=1, activation_function="linear")
-model.compile(loss="mse", metric="mae", learning_rate=0.001, alpha=0.01, batch_size=100)
+# # ANN model with a simple architecture
+# model = ANNModel()
+# model.add_layer(number_of_neurons=64, input_shape=X_train.shape[1], activation_function="relu")
+# model.add_layer(number_of_neurons=32, activation_function="relu")
+# model.add_layer(number_of_neurons=1, activation_function="linear")
+# model.compile(loss="mse", metric="mae", learning_rate=0.001, alpha=0.01, batch_size=100)
 
-# Train the model
-losses = model.train(X_train, Y_train)
+# # Train the model
+# losses = model.train(X_train, Y_train)
 
-# Predictions on train and test sets
-Y_pred_train = model.predict(X_train)
-Y_pred_test = model.predict(X_test)
+# # Predictions on train and test sets
+# Y_pred_train = model.predict(X_train)
+# Y_pred_test = model.predict(X_test)
 
-# Rescale predictions back to the original scale
-Y_pred_train_rescaled = scaler_Y.inverse_transform(Y_pred_train)
-Y_pred_test_rescaled = scaler_Y.inverse_transform(Y_pred_test)
-Y_train_rescaled = scaler_Y.inverse_transform(Y_train)
-Y_test_rescaled = scaler_Y.inverse_transform(Y_test)
+# # Rescale predictions back to the original scale
+# Y_pred_train_rescaled = scaler_Y.inverse_transform(Y_pred_train)
+# Y_pred_test_rescaled = scaler_Y.inverse_transform(Y_pred_test)
+# Y_train_rescaled = scaler_Y.inverse_transform(Y_train)
+# Y_test_rescaled = scaler_Y.inverse_transform(Y_test)
 
-# Plot Loss Curve
-plt.figure(figsize=(10, 4))
-plt.plot(losses, label="Training Loss")
-plt.xlabel("Epochs")
-plt.ylabel("MSE Loss")
-plt.title("Training Loss Curve")
-plt.legend()
-plt.show()
+# # Plot Loss Curve
+# plt.figure(figsize=(10, 4))
+# plt.plot(losses, label="Training Loss")
+# plt.xlabel("Epochs")
+# plt.ylabel("MSE Loss")
+# plt.title("Training Loss Curve")
+# plt.legend()
+# plt.show()
 
-# Plot Predictions vs Ground Truth
-plt.figure(figsize=(10, 6))
-plt.scatter(scaler_X.inverse_transform(X_train), Y_train_rescaled, label="Train Data", color="blue")
-plt.scatter(scaler_X.inverse_transform(X_test), Y_test_rescaled, label="Test Data", color="red")
-plt.scatter(scaler_X.inverse_transform(X_train), Y_pred_train_rescaled, label="Model Predictions", color="green")
-plt.xlabel("X Feature")
-plt.ylabel("Y Target")
-plt.title("Regression Predictions vs Ground Truth")
-plt.legend()
-plt.show()
+# # Plot Predictions vs Ground Truth
+# plt.figure(figsize=(10, 6))
+# plt.scatter(scaler_X.inverse_transform(X_train), Y_train_rescaled, label="Train Data", color="blue")
+# plt.scatter(scaler_X.inverse_transform(X_test), Y_test_rescaled, label="Test Data", color="red")
+# plt.scatter(scaler_X.inverse_transform(X_train), Y_pred_train_rescaled, label="Model Predictions", color="green")
+# plt.xlabel("X Feature")
+# plt.ylabel("Y Target")
+# plt.title("Regression Predictions vs Ground Truth")
+# plt.legend()
+# plt.show()

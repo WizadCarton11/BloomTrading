@@ -1,7 +1,7 @@
 import math
 import numpy as np
 import random
-from typeguard import typechecked, CollectionCheckStrategy
+# from typeguard import typechecked, CollectionCheckStrategy
 class ActivationClass:
     """
     Parent class for all activation functions.

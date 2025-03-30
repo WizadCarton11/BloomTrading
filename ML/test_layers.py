@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from layers import Layer
 from custom_exceptions import ValidationError, ValueError
-from typeguard import TypeCheckError
+# from typeguard import TypeCheckError
 from custom_exceptions import CustomException
 def test_assign_weights_valid():
     """Test assigning weights with valid input."""

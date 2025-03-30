@@ -1,0 +1,101 @@
+Investing is a way to grow your money over time by putting it into various assets. One of the popular investment options is stocks. When you invest in stocks, you become a shareholder and can benefit from the company’s profits and growth. However, the stock market can be volatile. Understanding the stock market basics can help you make informed decisions and potentially earn returns on your investment. In this article, learn about the share market in detail. 
+
+What Is a Stock?
+A stock is like a piece of a company that you can buy. When you own a stock, you’re a shareholder, which means you have a tiny ownership stake in that company. 
+
+As a shareholder, you can make money in two ways: if the company’s value goes up, your stock can be worth more, and you might sell it for a profit. Plus, some companies pay their shareholders a portion of their profits as dividends. Stocks can be bought and sold on the stock market, where their prices can go up and down based on how well the company is doing.
+
+What Is the Share Market?
+The share market, also known as the stock market, is a platform where buyers and sellers come together to trade publicly listed shares of companies. The market is regulated by the Securities and Exchange Board of India (SEBI), which oversees the functioning of stock exchanges and ensures that listed companies comply with regulations and disclosure requirements.
+
+If a company has issued 100 shares and you own 1 share, you own 1% stake in the company. The share market is where shares of different companies are traded.
+
+How Does the Stock Market Work?
+The stock market is like a big marketplace where people buy and sell stocks. When a company wants to grow, it can sell stocks to raise money. Investors who buy these stocks become shareholders, which means they own a small piece of the company. If the company does well and makes a profit, the stock price might increase. People can then sell their stocks at a higher price and make money. On the other hand, if the company doesn’t do well, the stock price might go down, and people could lose money.
+
+For example, imagine you buy 10 shares of a company at ₹5 each. If the company does great and the stock price goes up to ₹10, you could sell your shares for ₹100, making a profit of ₹50. However, due to some external or internal factors, if the stock price drops to ₹3, your shares would only be worth ₹30, and you would lose money if you sell them. 
+
+Who Determines the Price of a Stock?
+The market determines the price of the share as per the usual rules of demand and supply. Normally, share prices go up when the company is growing very fast, it is earning very good profits, or it gets new orders. As demand for the stock picks up, more investors want to buy the stock, which increases the stock price.
+
+Assume that the company’s products received a backslash, reducing the demand for the products. This can not only negatively affect the company’s revenue but also the stock price can drop as the stockholders want to sell their shares due to the fear of losing more.
+
+What Are Stock Indices?
+From the companies listed on the stock exchanges, a few similar stocks are grouped together to form an index. The classification may be based on company size, industry, market capitalisation, or other categories. 
+
+The Sensex is the oldest index comprising shares of 30 companies and represents roughly 45% of the free-float market capitalisation. The Nifty includes 50 top companies on the NSE based on their market capitalisation. Others include sector indices like the Nifty IT, Nifty FMCG, etc., and market cap indices include BSE Midcap or the BSE Small cap, and others.
+
+Types of Share Market
+Primary Market
+This phase constitutes the corporation’s registration to sell a predetermined number of shares, aiming to raise essential funds.
+Commonly executed through an Initial Public Offering (IPO), marking the company’s transition to a stock exchange-listed entity.
+This avenue is pivotal for companies seeking substantial financing, and investors often evaluate factors before participating in an IPO.
+Secondary Market
+Encompasses the subsequent trading of previously issued securities following their primary market sale.
+Facilitates investors in selling shares and strategically exiting their investments.
+Transactions entail one investor purchasing shares from another, typically facilitated by intermediaries like brokers.
+Brokers offer diverse plans, each carrying its unique features, emphasising the importance of comprehending these options for savvy investment decisions.
+Essential Financial Tools for Trading in the Stock Market
+The stock market is a complex and dynamic environment where traders need to make quick and informed decisions. To succeed in this field, traders need to use various financial tools that can help them analyze the market, identify opportunities, and execute trades. Some of the essential financial tools for trading in the stock market are:
+
+Trading platform: This is the software or application that allows traders to access the market, place orders, monitor positions, and manage their accounts. 
+Charting tool: A charting tool helps traders visualise market trends, patterns, and signals and apply technical analysis techniques, such as indicators, oscillators, and Fibonacci lines. It displays the price movements of securities in graphical form, using various types of charts, such as line, bar, candlestick, or point and figure.
+Scanning tool: It helps traders to find securities that meet certain criteria, such as price, volume, sector, industry, or technical indicators. A scanning tool helps traders to narrow down their search and focus on the most promising opportunities. 
+Backtesting tool: This is the tool that helps traders test their trading strategies on historical data and evaluate their performance, risk, and profitability. It helps traders to optimise their strategies, identify their strengths and weaknesses, and improve their confidence and discipline. 
+News source: A news source helps traders stay updated, informed, and prepared for market movements and incorporate fundamental analysis into their trading decisions. 
+These are some of the essential financial tools for trading in the stock market, but there are many more that traders can use to enhance their skills and results. The key is to find the tools that suit one’s trading style, goals, and preferences and to use them effectively and consistently.
+
+The Key Financial Instruments To Trade In The Stock Market
+Bonds:
+Enterprises secure funds for initiatives by releasing bonds and borrowing from a diverse group of investors who receive regular monthly interest payments. These are financial commitments where investors invest funds and receive regular interest payments along with the principal amount upon bond maturity. Crucial bond details include the face value, coupon rate, and maturity date. Investing in bonds requires tracking yield changes, emphasising their importance in financial markets.
+
+Shares:
+Firms secure funds through stock issuance, enabling investors to gain ownership of the company. Shareholders witness both the company’s triumphs and potential setbacks as market dynamics impact share values. Shares are traded on the secondary market, which allows investors to purchase or sell based on current market circumstances. Share ownership entails sharing in the company’s gains and losses, making it a dynamic and possibly riskier investment.
+
+Mutual Funds:
+Investment vehicles enable indirect participation in stock markets or bonds, pooling money from various investors. Managed by professional fund managers, mutual funds issue units representing investors’ holdings. Investment returns are represented in unit values or paid out as dividends to investors. For investors aiming for a well-diversified portfolio, mutual funds present an appealing choice, offering diversity and proficient management.
+
+Derivatives:
+Derivative products help to control financial instrument volatility by allowing for future price trading.  Investors opt into contracts to buy and sell shares or other securities at predetermined prices. For example, Futures contracts allow traders to hedge against price variations while speculating on market moves. Grasping the process of obtaining or selling a futures contract is vital for investors navigating the nuances of derivative trading.
+
+25 Important Stock Market Terms for Beginners
+There are several terms in the stock market, and every stock market investor must be aware of those terms to make informed decisions. Here’s a list of basic yet important stock market terms for beginners. 
+
+Demat Account: An electronic account used to hold, trade, and manage shares and securities in digital form, eliminating the need for physical share certificates. 
+Bull Market: A market characterised by rising stock prices, usually associated with investor optimism.
+Bear Market: A market characterised by falling stock prices, often driven by pessimism and economic downturns.
+Portfolio: A collection of stocks and other assets held by an investor.
+Diversification: Spreading investments across various asset classes to reduce risk.
+Market Capitalisation: The total value of a company’s outstanding shares, calculated by multiplying stock price by the number of shares.
+Dividend: A portion of a company’s earnings distributed to shareholders.
+Blue Chip Stocks: Shares of large, well-established, and financially stable companies.
+Volatility: The degree of variation of a stock’s price over time.
+Initial Public Offering (IPO): The first sale of a company’s stock to the public.
+Broker: A person or firm facilitating stock trades for investors.
+Bid and Ask: The highest price a buyer is willing to pay (bid) and the lowest price a seller is willing to accept (ask) for a stock.
+P/E Ratio (Price-to-Earnings): A ratio comparing a stock’s price to its earnings per share, indicating its valuation.
+Market Order: A buy or sell order executed immediately at the current market price.
+Limit Order: An order to buy or sell a stock at a specified price or better.
+Index: A benchmark representing a group of stocks used to measure market performance.
+ETF (Exchange-Traded Fund): A fund that holds multiple assets like stocks, bonds, or commodities and is traded on an exchange.
+Day Trading: The practice of buying and selling stocks within the same trading day.
+Liquidation: The sale of a company’s assets to pay off debts.
+Resistance Level: A price point at which a stock typically faces selling pressure.
+Support Level: A price point at which a stock typically experiences buying interest.
+Dividend Yield: The annual dividend a company pays compared to its share price.
+Capital Gain: Profit from selling a stock at a higher price than the purchase price.
+Stock Split: A corporate action increasing the number of shares in circulation, reducing their price.
+Earnings Per Share (EPS): A company’s profit divided by the number of outstanding shares.
+Conclusion
+Stocks are one of the most popular investments that can help grow your wealth. However, there are certain risks involved. Before investing, along with understanding stock market basics, it is important to consider your investment objectives, risk appetite and investment horizon. Go through the financial statements of a company and analyse its future prospects. To start, open a Demat Account now on Angel One for free and analyse stocks in detail. 
+
+A stock exchange is a regulated marketplace where buyers and sellers trade stocks and securities. Stock exchanges provide liquidity, transparency, and a platform for companies to raise capital by issuing shares to the public. In India, prominent stock exchanges include the NSE (National Stock Exchange) and the BSE (Bombay Stock Exchange).
+Equities represent the share of ownership in a company. When you invest in equities, you acquire a portion of the company and may benefit from its profits, but you also face the risk of losing your investment if the stock’s value declines.
+To be able to invest in the share market, you will need to open a Demat and trading account with a registered stock broker like Angel One. After conducting adequate research about the stocks that you want to invest in, you can proceed with the investment.
+Trading involves short-term buying and selling of stocks to profit from price fluctuations. At the same time, investing is a longer-term approach, focusing on buying stocks or any other asset with the intention of holding them for a long period.
+Primarily there are two types of share markets called Primary Market and Secondary Market. A primary market deals with the new issue of securities, such as an IPO, FPO, rights issue, etc. These securities post listing become tradeable in the secondary market.
+Yes, you can invest online in a share market. All you need to do is to open a Demat and Trading account with a SEBI-registered stock broker. We at Angel One provide you with an online platform for investing in shares.
+The best type of stock depends on individual preferences and financial goals. Blue-chip stocks offer stability, growth stocks promise high returns, value stocks are undervalued opportunities, and dividend stocks provide regular income. Small-cap, mid-cap, and large-cap stocks cater to risk preferences. Diversifying across these types can help balance risk and potential returns in a portfolio. It’s essential to align stock choices with personal financial objectives and conduct thorough research.
+Stocks undergo classification based on company attributes and market capitalisation, encompassing Blue-Chip, Growth, Value, and Dividends. Stocks are further classified based on market capitalisation as small-cap, mid-cap, or large-cap. Sector classification categorises equities by sector, whereas geography categorisation evaluates a company’s location. Investment styles, like growth or value, also impact stock categorisation. These classifications assist investors in diversifying portfolios and aligning investments with specific strategies and risk preferences.
+Small and mid-cap shares are frequently seen as riskier than large-cap companies. These smaller companies may be more vulnerable to recessions and have lower market liquidity.  Growth-oriented enterprises may pose higher risks owing to increasing volatility. Recognising that risk levels vary, it is critical to consider individual circumstances and risk tolerance while making investments.
+Stocks may be grouped into several categories based on their characteristics, market capitalisation, and investment strategy. Stocks are often classed as Blue Chip, Growth, Value, or Dividend. Market capitalisation distinguishes between small-cap, mid-cap, and large-cap stocks. Sector-specific and regional categories are based on industry and location.

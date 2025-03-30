@@ -26,7 +26,7 @@ class StockDataAnalyser:
             
             try:
                 scraper = StockDataScraper(self.stock_symbol, logger=self.logger)
-                historical_data = scraper.getStockDataByYfin()
+                historical_data = scraper.getStockData()
             except Exception as e:
                 raise_custom_exception(ScraperError, message=f"Failed to create StockDataScraper object for {self.stock_symbol}: {e}")
 

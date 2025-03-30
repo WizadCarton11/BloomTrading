@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from loss_layer import LossLayer
 from custom_exceptions import CustomException
-from typeguard import TypeCheckError
+# from typeguard import TypeCheckError
 
 def test_mean_squared_error_valid():
     loss = LossLayer()

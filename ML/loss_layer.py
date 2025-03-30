@@ -2,7 +2,7 @@ import numpy as np
 from custom_exceptions import ValidationError, ValueError, CustomException, raise_custom_exception
 from typing import Union
 import math
-from typeguard import typechecked, CollectionCheckStrategy
+# from typeguard import typechecked, CollectionCheckStrategy
 from custom_logger import CustomLogger
 class LossLayer:
     def __init__(self, loss_type: str):

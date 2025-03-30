@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 from activation_functions import ActivationClass
-from typeguard import TypeCheckError
+# from typeguard import TypeCheckError
 def test_relu_activation_valid():
     """Test ReLU activation function with valid input."""
     activation = ActivationClass()

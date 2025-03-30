@@ -2,7 +2,7 @@ import numpy as np
 from custom_exceptions import ValidationError, CustomException
 from custom_logger import CustomLogger
 from type_enforce import enforce_types
-from typeguard import typechecked, CollectionCheckStrategy
+# from typeguard import typechecked, CollectionCheckStrategy
 # Initialize logger
 logger = CustomLogger(name="MathOpsLogger", log_file="./Logs/math_ops.log").get_logger()
 

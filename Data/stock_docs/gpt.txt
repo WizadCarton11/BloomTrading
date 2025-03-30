@@ -1,0 +1,134 @@
+A stock represents ownership in a company. When you own stock in a company, you become a shareholder, meaning you have a claim on a portion of the company’s assets and earnings.
+
+Stocks are also referred to as equities because they represent a form of equity ownership.
+
+Companies issue stocks to raise capital for expansion, research, and other business activities.
+
+A share is a single unit of stock.
+
+When a company issues stock, it is divided into a certain number of shares, and each share represents a fractional ownership in the company.
+
+For example, if a company has issued 1 million shares and you own 1,000 shares, you own 0.1% of the company.
+
+Equity refers to the ownership interest in a company, represented by stocks.
+
+It is the difference between a company’s total assets and total liabilities.
+
+Investors buy equity (stocks) in the hope that the company will grow and generate profits, which will increase the stock’s value.
+
+A bond is a fixed-income investment in which an investor loans money to an entity (corporate or government) for a fixed period at a specified interest rate.
+
+The borrower (issuer) agrees to pay back the principal amount on a specific maturity date, along with periodic interest payments (coupon).
+
+Bonds are considered less risky than stocks but offer lower returns.
+
+[ CHECKPOINT ]
+
+A dividend is a portion of a company’s earnings paid to shareholders, usually in cash or additional shares.
+
+Companies that generate steady profits often distribute dividends to reward their shareholders.
+
+Not all stocks pay dividends—some companies reinvest profits for growth instead of distributing them.
+
+Market Capitalization (or Market Cap) is the total value of a company’s outstanding shares.
+
+Companies are often categorized based on their market cap:
+
+Large-cap (>$10 billion) – Stable, well-established companies.
+
+Mid-cap ($2 billion - $10 billion) – Companies with growth potential.
+
+Small-cap (<$2 billion) – Riskier but high-growth potential.
+
+
+An IPO is when a private company offers its shares to the public for the first time.
+
+Before an IPO, a company is privately owned, usually by founders, venture capitalists, or early investors.
+
+After an IPO, the company’s shares trade on a stock exchange, allowing the general public to invest.
+
+Blue-chip stocks are shares of large, well-established, financially stable companies with a history of steady growth and reliable dividends.
+
+These companies usually have strong brand recognition and operate in stable industries.
+
+Examples: Apple, Microsoft, Coca-Cola, and Johnson & Johnson.
+
+Blue-chip stocks are considered lower risk compared to smaller companies and are often included in long-term investment portfolios.
+
+Penny stocks are shares of small, lesser-known companies that trade at a very low price, typically below $5 per share.
+
+They are highly speculative and risky due to low liquidity, high volatility, and lack of financial transparency.
+
+Since these stocks belong to smaller companies, they have the potential for massive gains but also a high risk of failure.
+
+They often trade on over-the-counter (OTC) markets rather than major exchanges like the NYSE or Nasdaq.
+
+
+Common stock represents ownership in a company and grants voting rights to shareholders.
+
+Shareholders may receive dividends, but these are not guaranteed.
+
+In case of bankruptcy, common stockholders are the last to receive payouts, after bondholders and preferred shareholders.
+
+It offers the potential for capital appreciation (increase in stock price) but comes with higher risk.
+
+
+Preferred stock is a special type of stock that has priority over common stock in receiving dividends and assets during liquidation.
+
+Unlike common stock, preferred shareholders do not have voting rights in most cases.
+
+They receive fixed dividends, making it similar to a bond.
+
+Companies issue preferred stock to raise capital while avoiding dilution of common shareholders' voting power.
+
+A stock market index is a benchmark that tracks the performance of a group of stocks, representing a portion of the market.
+
+It helps investors gauge market trends and compare stock performance.
+
+Major indices include:
+
+S&P 500 – Tracks the 500 largest publicly traded U.S. companies.
+
+Dow Jones Industrial Average (DJIA) – Tracks 30 major U.S. companies.
+
+NASDAQ Composite – Includes all stocks listed on the Nasdaq exchange, with a heavy focus on technology stocks.
+
+Investors use indices to measure overall market health and as a basis for index funds or ETFs.
+
+An ETF is a fund that holds a collection of stocks, bonds, or commodities but trades like a stock on an exchange.
+
+ETFs offer diversification by investing in multiple assets, reducing risk.
+
+They have lower fees compared to mutual funds because they are passively managed.
+
+Examples:
+
+SPY (S&P 500 ETF) – Tracks the S&P 500 index.
+
+QQQ (Nasdaq-100 ETF) – Tracks the top 100 tech stocks.
+
+ETFs can be bought and sold throughout the trading day at market prices, just like stocks.
+
+A mutual fund is a professionally managed investment pool that collects money from multiple investors to invest in a diversified portfolio of stocks, bonds, or other assets.
+
+Unlike ETFs, mutual funds are actively managed, meaning fund managers make decisions to try to outperform the market.
+
+They are bought and sold at the end of the trading day at the fund's Net Asset Value (NAV).
+
+Mutual funds are ideal for long-term investors looking for professional management and diversification.
+
+A Real Estate Investment Trust (REIT) is a company that owns, operates, or finances income-generating real estate.
+
+REITs allow investors to invest in real estate without directly owning property.
+
+They pay high dividends because they are required to distribute at least 90% of their taxable income to shareholders.
+
+Types of REITs:
+
+Equity REITs – Own and manage properties like apartments, malls, and office buildings.
+
+Mortgage REITs (mREITs) – Invest in real estate loans and mortgages.
+
+Hybrid REITs – A mix of equity and mortgage REITs.
+
+REITs trade on major stock exchanges and provide a way to gain exposure to the real estate market.
