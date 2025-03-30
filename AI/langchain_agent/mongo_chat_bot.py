@@ -68,6 +68,16 @@ class MongoDBAtlasQA:
             print(f"Error initializing MongoDBAtlasQA: {e}")
 
     def get_chat_history(self, user_id, conversation_id):
+        """
+        Retrieve chat history for a user and conversation ID.
+
+        Args:
+            user_id (str): Unique identifier for a user.
+            conversation_id (str): Unique identifier for a conversation.
+
+        Returns:
+            SQLChatMessageHistory: Chat history for the user and conversation ID if successful, otherwise None.
+        """
         try:
             return SQLChatMessageHistory(
                 session_id=conversation_id,

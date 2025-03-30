@@ -16,6 +16,22 @@ class TextProcessor:
 
     
     def split_text(self):
+        """
+        Splits the text into chunks based on the specified splitting method.
+
+        This method supports four types of splitting methods:
+        - "recursive": Uses RecursiveCharacterTextSplitter with the specified chunk size and overlap.
+        - "character": Uses CharacterTextSplitter with the specified chunk size and overlap.
+        - "token": Uses TokenTextSplitter with the specified chunk size.
+        - "nltk": Uses NLTKTextSplitter with default settings.
+
+        Returns:
+            List[str]: A list of text chunks after splitting, or None in case of an error.
+
+        Raises:
+            ValueError: If the split method is not one of the supported types.
+        """
+
         try:
             if self.split_method == "recursive":
                 splitter = RecursiveCharacterTextSplitter(
@@ -39,6 +55,19 @@ class TextProcessor:
             return None
     
     def generate_embeddings(self, batch_size=32, normalize=False):
+        """
+        Generates embeddings for the text chunks.
+
+        This method uses the SentenceTransformer model to generate embeddings for the text chunks.
+        The embeddings are generated in batches of size `batch_size`.
+
+        Args:
+            batch_size (int): The size of each batch when generating embeddings. Defaults to 32.
+            normalize (bool): Whether to normalize the embeddings. Defaults to False.
+
+        Returns:
+            List[torch.Tensor]: A list of embeddings for the text chunks, or None in case of an error.
+        """
         try:
             if self.chunks is None:
                 raise ValueError("Text must be split before generating embeddings.")
