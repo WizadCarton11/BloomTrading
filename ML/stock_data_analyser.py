@@ -109,6 +109,7 @@ class StockDataAnalyser:
             historical_data.drop(historical_data.head(20).index, inplace=True)
             historical_data['Trend']=self.getSeasonalDecomposition(historical_data)
             historical_data['Stock_name']=self.stock_symbol
+            historical_data['index'] = historical_data.index
             self.plot_stock_data(historical_data)
             self.stock_data = historical_data
             
@@ -128,8 +129,11 @@ class StockDataAnalyser:
 
             # Create SQLAlchemy engine
             engine = create_engine(db_url)
+            # print(f"SELECT * FROM {self.stock_symbol.lower()}")
             df=pd.read_sql(f"SELECT * FROM {self.stock_symbol.lower()}", engine)
+            # print(df)
             # df.index=df['']
+            self.stock_data=df
 
         except CustomException as e:
             self.logger.error(f"A custom error occurred at StockDataAnalayser->_fetch_from_sql: {e}")
@@ -181,16 +185,16 @@ class StockDataAnalyser:
         fig = go.Figure()
 
         # Add Close Price line
-        fig.add_trace(go.Scatter(x=data.index, y=data['Close'], mode='lines', name='Close Price', line=dict(color='blue')))
+        fig.add_trace(go.Scatter(x=data['index'], y=data['Close'], mode='lines', name='Close Price', line=dict(color='blue')))
 
         # Add Bollinger Upper Band
-        fig.add_trace(go.Scatter(x=data.index, y=data['Bollinger_Upper'], mode='lines', name='Bollinger Upper Band', line=dict(color='red')))
+        fig.add_trace(go.Scatter(x=data['index'], y=data['Bollinger_Upper'], mode='lines', name='Bollinger Upper Band', line=dict(color='red')))
 
         # Add Bollinger Lower Band
-        fig.add_trace(go.Scatter(x=data.index, y=data['Bollinger_Lower'], mode='lines', name='Bollinger Lower Band', line=dict(color='green')))
+        fig.add_trace(go.Scatter(x=data['index'], y=data['Bollinger_Lower'], mode='lines', name='Bollinger Lower Band', line=dict(color='green')))
 
         # Add seasonal decomposition components
-        fig.add_trace(go.Scatter(x=data.index, y=data['EMA'], mode='lines', name='EMA', line=dict(color='orange')))
+        fig.add_trace(go.Scatter(x=data['index'], y=data['EMA'], mode='lines', name='EMA', line=dict(color='orange')))
         # Customize layout
         fig.update_layout(
             title="Stock Price with Bollinger Bands",

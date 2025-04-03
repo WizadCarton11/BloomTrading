@@ -27,7 +27,7 @@ class StockDataScraper:
             df.columns = ['Open', 'High', 'Low', 'Close', 'Volume']
 
             # only save upto 1200 rows
-            df = df.iloc[:1200]
+            df = df.iloc[:1000]
             # Convert the columns to numeric
             df = df.apply(pd.to_numeric) 
             self.structured_stock_data = df
@@ -55,7 +55,7 @@ class StockDataScraper:
                 alpha_data = self.alpha_vantage_data()
                 historical_data=pd.DataFrame.from_dict(self.stock_data['Time Series (Daily)'], orient='index')
                 historical_data.columns = ['Open', 'High', 'Low', 'Close', 'Volume']
-                historical_data=historical_data.iloc[:1200].apply(pd.to_numeric)
+                historical_data=historical_data.iloc[:1000].apply(pd.to_numeric)
                 # print(historical_data.size)
             except Exception as e:
                 raise_custom_exception(ScraperError, message=f"Failed to fetch data for {self.stock_symbol}: {e}")
