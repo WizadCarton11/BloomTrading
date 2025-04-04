@@ -22,7 +22,7 @@ from custom_logger import CustomLogger
 import datetime
 from custom_exceptions import raise_custom_exception, ScraperError, CustomException
 import plotly.graph_objects as go
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
 load_dotenv()
 class StockDataAnalyser:
@@ -148,6 +148,16 @@ class StockDataAnalyser:
 
             # Create SQLAlchemy engine
             engine = create_engine(db_url)
+            with engine.connect() as connection:
+                result = connection.execute(
+                    text(f"SELECT to_regclass('public.{self.stock_symbol.lower()}')")
+                ).scalar()
+                
+                if result:  # If table exists
+                    connection.execute(text(f"DELETE FROM public.{self.stock_symbol.lower()}"))
+                    connection.commit()
+
+            
             self.stock_data.to_sql(self.stock_symbol.lower(),engine, if_exists="replace", index=True)
 
         except CustomException as e:
