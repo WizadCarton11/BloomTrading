@@ -132,3 +132,5 @@ dist
 
 # Machine learning environment
 mlenv/
+*.keras
+*.pkl

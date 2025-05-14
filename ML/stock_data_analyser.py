@@ -35,7 +35,16 @@ class StockDataAnalyser:
         self.logger = CustomLogger("StockDataAnalyser", log_file=f'./Logs/stock_data_analyser/{timestamp}.log').get_logger()
         self.stock_data=None
 
-
+    def fetch_from_db(self):
+        try:
+            self._fetch_from_sql()
+            return self.stock_data
+        except CustomException as e:
+            self.logger.error(f"A custom error occurred at StockDataAnalayser->fetch_from_db: {e}")
+            return None
+        except Exception as e:
+            self.logger.error(f"An error occurred at StockDataAnalayser->fetch_from_db: {e}")
+            return None 
         
     def fetch_from_db_and_analyze(self):
         try:
@@ -62,7 +71,7 @@ class StockDataAnalyser:
             historical_data = self._get_bollinger_bands(historical_data)
             
             for i in range(1, 20):
-                historical_data[f'Close_Lag{i}'] = historical_data['Close'].shift(i)
+                historical_data[f'Close_Lag{i}'] = historical_data['Close'].shift(-i)
             
             historical_data.drop(historical_data.head(20).index, inplace=True)
             historical_data['Trend']=self.getSeasonalDecomposition(historical_data)
