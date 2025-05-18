@@ -14,6 +14,7 @@ import joblib
 from sklearn.metrics import r2_score, mean_absolute_error
 import matplotlib.pyplot as plt
 load_dotenv(override=True)
+
 class StockPriceNN:
     def __init__(self, stock_symbol):
         self.sda= StockDataAnalyser(stock_symbol=stock_symbol)
@@ -26,6 +27,7 @@ class StockPriceNN:
         timestamp = datetime.datetime.now().strftime("%Y%m%d")
         self.minio_handler=MinIOHandler(
             endpoint=os.getenv("MINIO_ENDPOINT"),
+            # endpoint=endpoint,
             access_key=os.getenv("MINIO_ACCESS_KEY"),
             secret_key=os.getenv("MINIO_SECRET_KEY"),
             bucket_name=os.getenv("MINIO_BUCKET_NAME"),
@@ -38,20 +40,20 @@ class StockPriceNN:
         try:
         # data=self.sda.fetch_and_store_stock_data(mode='sql')
             self.df=self.sda.fetch_from_db()
-            y = self.df[['High', 'Low']].values
+            y = self.df[['Close']].values
             X = self.df.drop(columns=['Open', 'High', 'Low', 'Volume', 'EMA','Close',
-                                    'Bollinger_Upper', 'Close_Lag1', 'Bollinger_Lower',
+                                    'Bollinger_Upper', 'Bollinger_Lower',
                                     'Trend', 'Stock_name', 'index']).values
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=12)
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=12)
 
             self.X_train = self.scalerX.fit_transform(X_train)
             self.X_test = self.scalerX.transform(X_test)
             self.y_train = self.scalerY.fit_transform(y_train)
             self.y_test = self.scalerY.transform(y_test)
-            joblib.dump(self.scalerX, f'scalers/scalerX_{self.stock_symbol}.pkl')
-            joblib.dump(self.scalerY, f'scalers/scalerY_{self.stock_symbol}.pkl')
-            self.minio_handler.upload_file(file_path=f'scalers/scalerX_{self.stock_symbol}.pkl', object_name=f'scalers/scalerX_{self.stock_symbol}.pkl')
-            self.minio_handler.upload_file(file_path=f'scalers/scalerY_{self.stock_symbol}.pkl', object_name=f'scalers/scalerY_{self.stock_symbol}.pkl')
+            joblib.dump(self.scalerX, f'scalers/{self.stock_symbol}_scaler_X.pkl')
+            joblib.dump(self.scalerY, f'scalers/{self.stock_symbol}_scaler_Y.pkl')
+            self.minio_handler.upload_file(file_path=f'scalers/{self.stock_symbol}_scaler_X.pkl', object_name=f'scalers/{self.stock_symbol}_scaler_X.pkl')
+            self.minio_handler.upload_file(file_path=f'scalers/{self.stock_symbol}_scaler_Y.pkl', object_name=f'scalers/{self.stock_symbol}_scaler_Y.pkl')
         except CustomException as e:
             self.logger.error(f"A custom error occurred at StockPriceNN->preprocess: {e}")
             return None
@@ -72,17 +74,28 @@ class StockPriceNN:
 
     def build_model(self, input_dim):
         try:
+            print(input_dim)
             self.model = keras.Sequential([
-                keras.layers.Dense(256, activation='relu', input_shape=(18,)),
+                keras.layers.Dense(256, activation='relu', input_shape=(input_dim,)),
                 keras.layers.Dropout(0.1),
                 keras.layers.Dense(128, activation='relu'),
                 keras.layers.Dropout(0.2),
                 keras.layers.Dense(64, activation='relu'),
                 keras.layers.Dropout(0.1),
                 keras.layers.Dense(32, activation='relu'),
-                keras.layers.Dense(4)
+                keras.layers.Dense(1)
             ])
-            self.model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
+            
+            self.model.compile(
+                optimizer='adam',
+                loss='mean_squared_error',
+                metrics=[
+                    'mae',          # Mean Absolute Error
+                    'mse',          # Mean Squared Error
+                    keras.metrics.RootMeanSquaredError(name='rmse'),  # RMSE (sqrt of mse)
+                    keras.metrics.MeanAbsolutePercentageError(name='mape'),  # MAPE (percentage error)
+                ]
+            )
         except CustomException as e:
             self.logger.error(f"A custom error occurred at StockPriceNN->build_model: {e}")
             return None
@@ -93,11 +106,11 @@ class StockPriceNN:
     def load_model(self):
         try:
             # self.minio_handler.download_file(object_name=f'{self.stock_symbol}_best_model.keras', destination_path=f'models/{self.stock_symbol}_best_model.keras')
-            self.minio_handler.download_file(object_name=f'scalers/scalerX_{self.stock_symbol}.pkl', destination_path=f'scalers/scalerX_{self.stock_symbol}.pkl')
-            self.minio_handler.download_file(object_name=f'scalers/scalerY_{self.stock_symbol}.pkl', destination_path=f'scalers/scalerY_{self.stock_symbol}.pkl')
+            self.minio_handler.download_file(object_name=f'scalers/{self.stock_symbol}_scaler_X.pkl', destination_path=f'scalers/{self.stock_symbol}_scaler_X.pkl')
+            self.minio_handler.download_file(object_name=f'scalers/{self.stock_symbol}_scaler_Y.pkl', destination_path=f'scalers/{self.stock_symbol}_scaler_Y.pkl')
             self.model = keras.models.load_model(f'models/{self.stock_symbol}_best_model.keras')
-            self.scalerX = joblib.load(f'scalers/scalerX_{self.stock_symbol}.pkl')
-            self.scalerY = joblib.load(f'scalers/scalerY_{self.stock_symbol}.pkl')
+            self.scalerX = joblib.load(f'scalers/{self.stock_symbol}_scaler_X.pkl')
+            self.scalerY = joblib.load(f'scalers/{self.stock_symbol}_scaler_Y.pkl')
         except CustomException as e:
             self.logger.error(f"A custom error occurred at StockPriceNN->load_model: {e}")
             return None
@@ -108,10 +121,12 @@ class StockPriceNN:
 
     def train(self, epochs=200):
         try:
-            early_stop = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True, verbose=1)
+            early_stop = EarlyStopping(monitor='val_loss', patience=25, restore_best_weights=True, verbose=1)
             checkpoint = ModelCheckpoint(filepath=f'models/{self.stock_symbol}_best_model.keras', monitor='val_loss', save_best_only=True, verbose=1)
-            
+            print(self.X_train.shape)
             self.build_model(input_dim=self.X_train.shape[1])
+            print(self.X_test.shape)
+            print(self.y_test.shape)
             self.model.fit(
                 self.X_train, self.y_train,
                 epochs=epochs,
@@ -119,6 +134,7 @@ class StockPriceNN:
                 validation_data=(self.X_test, self.y_test),
                 callbacks=[early_stop, checkpoint]
             )
+            print("reached")
             self.minio_handler.upload_file(file_path=f'models/{self.stock_symbol}_best_model.keras', object_name=f'models/{self.stock_symbol}_best_model.keras')
         except CustomException as e:
             self.logger.error(f"A custom error occurred at StockPriceNN->train: {e}")
@@ -129,16 +145,34 @@ class StockPriceNN:
 
     def evaluate(self):
         try:
-            loss, mae = self.model.evaluate(self.X_test, self.y_test)
-            print(f"Test MAE: {mae:.2f}")
-            print(f"Test Loss: {loss:.2f}")
-            return mae
+            self.df = self.sda.fetch_from_db()
+            y = self.df[['Close']].values
+            X = self.df.drop(columns=['Open', 'High', 'Low', 'Volume', 'EMA', 'Close',
+                                    'Bollinger_Upper', 'Bollinger_Lower',
+                                    'Trend', 'Stock_name', 'index']).values
+            
+            _, X_test, _, y_test = train_test_split(X, y, test_size=0.4, random_state=45)
+            
+            self.X_test = self.scalerX.transform(X_test)
+            self.y_test = self.scalerY.transform(y_test)
+            
+            # Evaluate returns list: [loss, mae, mse, rmse, mape]
+            results = self.model.evaluate(self.X_test, self.y_test, verbose=0)
+            
+            # Map results to metric names (must match compile order)
+            metrics_names = ['loss', 'mae', 'mse', 'rmse', 'mape']
+            
+            metrics_dict = dict(zip(metrics_names, results))
+            
+            return metrics_dict
+        
         except CustomException as e:
             self.logger.error(f"A custom error occurred at StockPriceNN->evaluate: {e}")
             return None
         except Exception as e:
             self.logger.error(f"An error occurred at StockPriceNN->evaluate: {e}")
             return None
+
 
 
     def plot_predictions(self):

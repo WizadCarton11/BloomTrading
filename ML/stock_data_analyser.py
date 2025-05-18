@@ -140,8 +140,11 @@ class StockDataAnalyser:
             engine = create_engine(db_url)
             # print(f"SELECT * FROM {self.stock_symbol.lower()}")
             df=pd.read_sql(f"SELECT * FROM {self.stock_symbol.lower()}", engine)
+            if df.empty:
+                df=self.fetch_and_store_stock_data(mode='sql')
             # print(df)
             # df.index=df['']
+            df=df.dropna(axis=0)
             self.stock_data=df
 
         except CustomException as e:
