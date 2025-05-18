@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import psutil
 import time
 from lru_cache import LRUCache
+from stock_data_analyser import StockDataAnalyser
 
 app = FastAPI(title="Stock Price Prediction API")
 
@@ -88,8 +89,19 @@ async def evaluate(stock_symbol: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-start_time = time.time()
+@app.get('/get_analysis/{stock_symbol}')
+async def get_analysis(stock_symbol: str):
+    try:
+        sda=StockDataAnalyser(stock_symbol=stock_symbol)
+        df=sda.getAnalysis()
+        return {
+            "stock_symbol": stock_symbol,
+            "analysis": df.to_dict()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
+
+start_time = time.time()
 @app.get("/health")
 async def health_check():
     uptime_seconds = time.time() - start_time

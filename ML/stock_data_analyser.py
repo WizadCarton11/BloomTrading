@@ -34,7 +34,8 @@ class StockDataAnalyser:
         timestamp = datetime.datetime.now().strftime("%Y%m%d")
         self.logger = CustomLogger("StockDataAnalyser", log_file=f'./Logs/stock_data_analyser/{timestamp}.log').get_logger()
         self.stock_data=None
-
+    
+    #region fetching
     def fetch_from_db(self):
         try:
             self._fetch_from_sql()
@@ -46,16 +47,6 @@ class StockDataAnalyser:
             self.logger.error(f"An error occurred at StockDataAnalayser->fetch_from_db: {e}")
             return None 
         
-    def fetch_from_db_and_analyze(self):
-        try:
-            self._fetch_from_sql()
-            self.plot_stock_data(self.stock_data)
-        except CustomException as e:
-            self.logger.error(f"A custom error occurred at StockDataAnalayser->fetch_from_sql_and_analyze: {e}")
-            return None
-        except Exception as e:
-            self.logger.error(f"An error occurred at StockDataAnalayser->fetch_from_sql_and_analyze: {e}")
-            return None        
 
     def fetch_and_store_stock_data(self, mode='csv'):
         try:
@@ -178,8 +169,38 @@ class StockDataAnalyser:
         except Exception as e:
             self.logger.error(f"An error occurred at StockDataAnalayser->dump_into_sql: {e}")
             return None
+    #endregion
 
+    #region Analysis
 
+    def fetch_from_db_and_analyze(self):
+        try:
+            self._fetch_from_sql()
+            self.plot_stock_data(self.stock_data)
+        except CustomException as e:
+            self.logger.error(f"A custom error occurred at StockDataAnalayser->fetch_from_sql_and_analyze: {e}")
+            return None
+        except Exception as e:
+            self.logger.error(f"An error occurred at StockDataAnalayser->fetch_from_sql_and_analyze: {e}")
+            return None        
+    def getAnalysis(self):
+        try:
+            self.df=self.fetch_from_db()
+            # get the latest data by "index column which has date"
+            latest_record = self.df.sort_values(by="index").iloc[-1]
+            
+            # latest_record=latest_record.drop(f"Close_Lag{i}" for i in range(1, 19))
+            # print(latest_record)
+            # latest_record.rename({"Close_Lag19": "Close_before_19_days"}, inplace=True)
+            latest_record.rename({f"Close_Lag{i}": f"Close_before_{i}_days" for i in range(1, 20)}, inplace=True)
+            # print(latest_record)
+            return latest_record
+        except CustomException as e:
+            self.logger.error(f"A custom error occurred at StockDataAnalayser->getAnalysis: {e}")
+            return None
+        except Exception as e:
+            self.logger.error(f"An error occurred at StockDataAnalayser->getAnalysis: {e}")
+            return None
     def getSeasonalDecomposition(self, stock_data):
         """
         Perform seasonal decomposition on stock data.
@@ -228,3 +249,5 @@ class StockDataAnalyser:
 
         # Show the figure
         fig.show()
+
+    #endregion
