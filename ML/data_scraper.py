@@ -114,6 +114,7 @@ class StockDataScraper:
         
     def alpha_vantage_info(self):
         try:
+
             url=f"https://www.alphavantage.co/query?function=OVERVIEW&symbol={self.stock_symbol}&apikey={os.environ['ALPHA_VANTAGE_API_KEY']}"
             response = requests.get(url)
             data = response.json()
@@ -123,7 +124,8 @@ class StockDataScraper:
 
     def alpha_vantage_news(self):
         try:
-            url=f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={self.stock_symbol}&interval=5min&apikey={os.environ['ALPHA_VANTAGE_API_KEY']}"
+            # url=f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={self.stock_symbol}&interval=5min&apikey={os.environ['ALPHA_VANTAGE_API_KEY']}"
+            url=f"https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers={self.stock_symbol}&apikey={os.environ['ALPHA_VANTAGE_API_KEY']}"
             response = requests.get(url)
             data = response.json()
             return data

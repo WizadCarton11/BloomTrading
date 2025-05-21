@@ -96,7 +96,8 @@ async def get_analysis(stock_symbol: str):
         df=sda.getAnalysis()
         return {
             "stock_symbol": stock_symbol,
-            "analysis": df.to_dict()}
+            "analysis": df.to_dict()
+            }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

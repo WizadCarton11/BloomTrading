@@ -36,10 +36,25 @@ class StockDataAnalyser:
         self.stock_data=None
     
     #region fetching
-    def fetch_from_db(self):
+    def fetch_latest_record_from_db(self):
         try:
-            self._fetch_from_sql()
-            return self.stock_data
+            db_url = os.getenv('POSTGRES_URI')
+
+            # Create SQLAlchemy engine
+            engine = create_engine(db_url)
+            with engine.connect() as connection:
+                result = connection.execute(
+                    text(f"SELECT to_regclass('public.{self.stock_symbol.lower()}')")
+                ).scalar()
+                
+                if result:  # If table exists
+                    df=pd.read_sql(f"SELECT * FROM {self.stock_symbol.lower()} ORDER BY index DESC LIMIT 1", engine)
+                    return df.loc[0,:]
+                else:
+                    self.fetch_and_store_stock_data(mode='sql')
+                    df=pd.read_sql(f"SELECT * FROM {self.stock_symbol.lower()} ORDER BY index DESC LIMIT 1", engine)
+                    return df.loc[0,:]
+                
         except CustomException as e:
             self.logger.error(f"A custom error occurred at StockDataAnalayser->fetch_from_db: {e}")
             return None
@@ -185,15 +200,14 @@ class StockDataAnalyser:
             return None        
     def getAnalysis(self):
         try:
-            self.df=self.fetch_from_db()
-            # get the latest data by "index column which has date"
-            latest_record = self.df.sort_values(by="index").iloc[-1]
+            latest_record=self.fetch_latest_record_from_db()
             
-            # latest_record=latest_record.drop(f"Close_Lag{i}" for i in range(1, 19))
-            # print(latest_record)
-            # latest_record.rename({"Close_Lag19": "Close_before_19_days"}, inplace=True)
-            latest_record.rename({f"Close_Lag{i}": f"Close_before_{i}_days" for i in range(1, 20)}, inplace=True)
-            # print(latest_record)
+            for i in range(1, 20):
+                if i==1 or i==10 or i==19:
+                    pass
+                else:
+                    latest_record.drop(index=[f"Close_Lag{i}"], axis=0,  inplace=True)
+            
             return latest_record
         except CustomException as e:
             self.logger.error(f"A custom error occurred at StockDataAnalayser->getAnalysis: {e}")
