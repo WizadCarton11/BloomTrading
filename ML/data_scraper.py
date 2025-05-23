@@ -42,7 +42,7 @@ class StockDataScraper:
         except Exception as e:
             self.logger.error(f"Failed to dump data into CSV: {e}")
             raise CustomException(f"Failed to dump data into CSV: {e}")
-    def getStockData(self, period='5y'):
+    def getStockData(self, period='5y', compact=False):
         try:
             try:
                 # print("entering")
@@ -52,7 +52,7 @@ class StockDataScraper:
                 # historical_data= self.yahoo_finance_data(period=period)
 
                 # ALPHAVANTAGE API
-                alpha_data = self.alpha_vantage_data()
+                alpha_data = self.alpha_vantage_data(compact=compact)
                 historical_data=pd.DataFrame.from_dict(self.stock_data['Time Series (Daily)'], orient='index')
                 historical_data.columns = ['Open', 'High', 'Low', 'Close', 'Volume']
                 historical_data=historical_data.iloc[:1000].apply(pd.to_numeric)
@@ -102,9 +102,12 @@ class StockDataScraper:
         except Exception as e:
             raise CustomException(f"Failed to fetch news for {self.stock_symbol}: {e}")
 
-    def alpha_vantage_data(self):
+    def alpha_vantage_data(self,compact=False):
         try:
-            url=f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={self.stock_symbol}&apikey={os.environ['ALPHA_VANTAGE_API_KEY']}&outputsize=full&datatype=json"
+            if compact is False:
+                url=f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={self.stock_symbol}&apikey={os.environ['ALPHA_VANTAGE_API_KEY']}&outputsize=full&datatype=json"
+            else:
+                url=f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={self.stock_symbol}&apikey={os.environ['ALPHA_VANTAGE_API_KEY']}&outputsize=compact&datatype=json"
             response = requests.get(url)
             data = response.json()
             self.stock_data = data

@@ -134,3 +134,4 @@ dist
 mlenv/
 *.keras
 *.pkl
+*.csv
