@@ -2,11 +2,17 @@ import os
 from fastapi import FastAPI
 from pydantic import BaseModel
 from mongo_chat_bot import MongoDBAtlasQA
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain_groq import ChatGroq
+from langchain_huggingface import HuggingFaceEmbeddings
 
+
+from langchain_groq import ChatGroq
+import uvicorn
 from dotenv import load_dotenv
 load_dotenv(override=True)
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ["TRANSFORMERS_NO_TF"] = "1"
+
 
 INDEX_NAME = "test_vector_index"
 MONGO_URI = os.getenv("MONGODB_ATLAS_CLUSTER_URI")
@@ -26,3 +32,6 @@ async def query_mongo(request: QueryRequest):
     qa_system = MongoDBAtlasQA(MONGO_URI, DB_NAME, COLLECTION_NAME, embedding, INDEX_NAME, llm, conversation_id=request.conversation_id)
     response = qa_system.query(request.query)
     return {"response": response}
+
+if __name__ == "__main__":
+    uvicorn.run("server:app", host="0.0.0.0", port=8080, reload=True)

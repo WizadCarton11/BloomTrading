@@ -35,7 +35,8 @@ class MongoDBAtlasQA:
                 ]
             )
             self.llm: ChatGroq=llm
-            self.llm.bind_tools([self.get_similarity_search])
+            # self.llm.bind_tools([self.get_similarity_search])
+            
             self.llm= self._prompt| self.llm | StrOutputParser()
             
             self._config_fields = [
@@ -92,6 +93,7 @@ class MongoDBAtlasQA:
     def get_similarity_search(self, query):
         """Perform a similarity search for info on stock market."""
         try:
+            print(f"Performing similarity search for query: {query}")
             results = self.atlas.similarity_search(query)
             return results
         except Exception as e:
