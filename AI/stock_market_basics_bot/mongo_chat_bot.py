@@ -37,6 +37,120 @@ from langchain.agents import AgentType, initialize_agent
 from mongodb_atlas import MongoDBAtlas, MongoDBAtlasDocumentManager
 
 
+from langchain_groq import ChatGroq
+import os
+import redis
+import json
+import hashlib
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.tools import tool
+from langchain_community.chat_message_histories import SQLChatMessageHistory
+from langchain_core.runnables.utils import ConfigurableFieldSpec
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_core.runnables import RunnableLambda
+from langchain_core.messages import SystemMessage
+from langchain.agents import AgentType, initialize_agent
+
+from mongodb_atlas import MongoDBAtlas, MongoDBAtlasDocumentManager
+
+
+class RedisCacheManager:
+    """Manages Redis caching operations for the QA system."""
+    
+    def __init__(self, redis_host: str = "localhost", redis_port: int = 6379, 
+                 redis_db: int = 0, cache_ttl: int = 3600):
+        """
+        Initialize Redis cache manager.
+        
+        Args:
+            redis_host: Redis server host
+            redis_port: Redis server port
+            redis_db: Redis database number
+            cache_ttl: Cache time-to-live in seconds (default: 1 hour)
+        """
+        try:
+            self.redis_client = redis.Redis(
+                host=redis_host, 
+                port=redis_port, 
+                db=redis_db,
+                decode_responses=True
+            )
+            self.cache_ttl = cache_ttl
+            # Test connection
+            self.redis_client.ping()
+            print("Successfully connected to Redis")
+        except Exception as e:
+            print(f"Error connecting to Redis: {e}")
+            self.redis_client = None
+    
+    def _generate_cache_key(self, query: str, user_id: str = None, conversation_id: str = None) -> str:
+        """Generate a unique cache key for the query."""
+        # Create a unique identifier including user context
+        key_components = [query.strip().lower()]
+        # if user_id:
+        #     key_components.append(f"user:{user_id}")
+        # if conversation_id:
+        #     key_components.append(f"conv:{conversation_id}")
+        
+        # Create hash of the combined components
+        key_string = "|".join(key_components)
+        return f"qa_cache:{hashlib.md5(key_string.encode()).hexdigest()}"
+    
+    def get_cached_result(self, query: str, user_id: str = None, conversation_id: str = None) -> str:
+        """Retrieve cached result for a query."""
+        if not self.redis_client:
+            return None
+        
+        try:
+            cache_key = self._generate_cache_key(query, user_id, conversation_id)
+            cached_result = self.redis_client.get(cache_key)
+            
+            if cached_result:
+                print(f"Cache HIT for query: {query[:50]}...")
+                return json.loads(cached_result)
+            else:
+                print(f"Cache MISS for query: {query[:50]}...")
+                return None
+                
+        except Exception as e:
+            print(f"Error retrieving from cache: {e}")
+            return None
+    
+    def set_cached_result(self, query: str, result: str, user_id: str = None, conversation_id: str = None):
+        """Store result in cache."""
+        if not self.redis_client:
+            return
+        
+        try:
+            cache_key = self._generate_cache_key(query, user_id, conversation_id)
+            self.redis_client.setex(
+                cache_key, 
+                self.cache_ttl, 
+                json.dumps(result)
+            )
+            print(f"Cached result for query: {query[:50]}...")
+            
+        except Exception as e:
+            print(f"Error storing in cache: {e}")
+    
+    def clear_cache(self, pattern: str = "qa_cache:*"):
+        """Clear cache entries matching pattern."""
+        if not self.redis_client:
+            return
+        
+        try:
+            keys = self.redis_client.keys(pattern)
+            if keys:
+                self.redis_client.delete(*keys)
+                print(f"Cleared {len(keys)} cache entries")
+            else:
+                print("No cache entries found to clear")
+                
+        except Exception as e:
+            print(f"Error clearing cache: {e}")
+
+
 class LimitedSQLChatMessageHistory(SQLChatMessageHistory):
     """Custom SQLChatMessageHistory that limits the number of messages returned."""
     
@@ -141,7 +255,7 @@ class ChatHistoryManager:
         try:
             full_history = SQLChatMessageHistory(
                 table_name=self.table_name,
-                session_id=user_id+conversation_id,
+                session_id=conversation_id,
                 connection=self.postgres_uri,
             )
             
@@ -243,6 +357,56 @@ class ChainBuilder:
             history_factory_config=self.config_fields
         ).with_config(config)
     
+    def build_full_qa_chain_with_cache(self, config: dict, cache_manager: 'RedisCacheManager' = None):
+        """Build the complete QA chain with Redis caching."""
+        if not cache_manager:
+            # Fallback to original chain if no cache manager
+            return self.build_full_qa_chain(config)
+        
+        def cached_qa_pipeline(inputs):
+            """Main pipeline with caching logic."""
+            original_query = inputs["query"]
+            user_id = config.get("configurable", {}).get("user_id")
+            conversation_id = config.get("configurable", {}).get("conversation_id")
+            
+            # Step 1: Check cache for original query
+            cached_result = cache_manager.get_cached_result(original_query, user_id, conversation_id)
+            if cached_result:
+                return cached_result
+            
+            # Step 2: Refine query using chat history
+            refine_query_chain = self.build_history_aware_chain(config)
+            refined_query = refine_query_chain.invoke({"query": original_query})
+            
+            # Step 3: Check cache for refined query (if different from original)
+            if refined_query.strip().lower() != original_query.strip().lower():
+                cached_refined_result = cache_manager.get_cached_result(refined_query, user_id, conversation_id)
+                if cached_refined_result:
+                    # Cache the result for original query too
+                    cache_manager.set_cached_result(original_query, cached_refined_result, user_id, conversation_id)
+                    return cached_refined_result
+            
+            # Step 4: Run full pipeline if no cache hits
+            print("No cache hits, running full pipeline...")
+            
+            # Similarity search
+            documents = self.vector_manager.similarity_search(refined_query, k=2)
+            
+            # Format and generate answer
+            formatted_input = {
+                "text": f"Base Knowledge: {self._format_documents(documents)}\nUser Query: {refined_query}"
+            }
+            final_result = self.llm_manager.get_summary_chain().invoke(formatted_input)
+            
+            # Step 5: Cache the results
+            cache_manager.set_cached_result(refined_query, final_result, user_id, conversation_id)
+            if refined_query.strip().lower() != original_query.strip().lower():
+                cache_manager.set_cached_result(original_query, final_result, user_id, conversation_id)
+            
+            return final_result
+        
+        return RunnableLambda(cached_qa_pipeline)
+
     def build_full_qa_chain(self, config: dict):
         """Build the complete QA chain."""
         # Step 1: Refine query using limited chat history
@@ -272,13 +436,20 @@ class MongoDBAtlasQA:
     
     def __init__(self, mongo_uri, db_name, collection_name, embedding, index_name, llm, 
                  conversation_id: str = "test_session", user_id: str = "user1", 
-                 history_limit: int = 2):
+                 history_limit: int = 2, enable_cache: bool = True, cache_manager: RedisCacheManager = None):
         """Initialize the MongoDB Atlas QA system."""
         try:
             # Initialize core components
             self._setup_mongodb_atlas(db_name, collection_name, embedding, index_name)
             self._setup_managers(llm, history_limit)
             self._setup_configuration(user_id, conversation_id)
+            
+            # Initialize Redis cache manager
+            if enable_cache:
+                self.cache_manager =cache_manager
+            else:
+                self.cache_manager = None
+            
             self._setup_chains()
             
         except Exception as e:
@@ -336,8 +507,11 @@ class MongoDBAtlasQA:
             self._config_fields
         )
         
-        # Build the main QA chain
-        self.full_chain = self.chain_builder.build_full_qa_chain(self.config)
+        # Build the main QA chain with caching if enabled
+        if self.cache_manager:
+            self.full_chain = self.chain_builder.build_full_qa_chain_with_cache(self.config, self.cache_manager)
+        else:
+            self.full_chain = self.chain_builder.build_full_qa_chain(self.config)
 
     def run_llm_with_history(self, text: str) -> str:
         """Run the LLM with chat history."""
@@ -367,16 +541,40 @@ class MongoDBAtlasQA:
             return "Error summarizing the answer."
         
     def run(self, text: str) -> str:
-        """Run the MongoDB Atlas QA system."""
+        """Run the MongoDB Atlas QA system with caching."""
         try:
             result = self.full_chain.invoke({"query": text}, config=self.config)
             return result
         except Exception as e:
             print(f"Error running the MongoDB Atlas QA system: {e}")
             return "Error processing your request."
+    
+    def clear_cache(self):
+        """Clear the Redis cache."""
+        if self.cache_manager:
+            self.cache_manager.clear_cache()
+        else:
+            print("No cache manager available")
+    
+    def get_cache_stats(self):
+        """Get cache statistics (if Redis info command is available)."""
+        if self.cache_manager and self.cache_manager.redis_client:
+            try:
+                info = self.cache_manager.redis_client.info()
+                return {
+                    "keyspace_hits": info.get("keyspace_hits", 0),
+                    "keyspace_misses": info.get("keyspace_misses", 0),
+                    "used_memory_human": info.get("used_memory_human", "N/A")
+                }
+            except Exception as e:
+                print(f"Error getting cache stats: {e}")
+                return None
+        return None
 
 
-# Usage example:
+# Usage examples:
+
+# Basic usage with Redis cache enabled (default)
 # qa_system = MongoDBAtlasQA(
 #     mongo_uri="your_uri",
 #     db_name="your_db", 
@@ -384,5 +582,25 @@ class MongoDBAtlasQA:
 #     embedding=your_embedding,
 #     index_name="your_index",
 #     llm=your_llm,
-#     history_limit=5  # Only keep last 5 messages
+#     history_limit=5,  # Only keep last 5 messages
+#     redis_host="localhost",  # Redis host
+#     redis_port=6379,  # Redis port
+#     cache_ttl=3600,  # Cache for 1 hour
+#     enable_cache=True  # Enable Redis caching
 # )
+
+# Usage without caching
+# qa_system = MongoDBAtlasQA(
+#     mongo_uri="your_uri",
+#     db_name="your_db", 
+#     collection_name="your_collection",
+#     embedding=your_embedding,
+#     index_name="your_index",
+#     llm=your_llm,
+#     enable_cache=False  # Disable caching
+# )
+
+# Usage examples:
+# result = qa_system.run("What is the current stock price of AAPL?")
+# qa_system.clear_cache()  # Clear cache when needed
+# stats = qa_system.get_cache_stats()  # Get cache statistics
