@@ -26,11 +26,14 @@ app = FastAPI()
 class QueryRequest(BaseModel):
     query: str
     conversation_id: str 
+    user_id: str
 
 @app.post("/query")
 async def query_mongo(request: QueryRequest):
-    qa_system = MongoDBAtlasQA(MONGO_URI, DB_NAME, COLLECTION_NAME, embedding, INDEX_NAME, llm, conversation_id=request.conversation_id)
-    response = qa_system.query(request.query)
+    qa_system = MongoDBAtlasQA(MONGO_URI, DB_NAME, COLLECTION_NAME, embedding, INDEX_NAME, llm,
+                                conversation_id=request.conversation_id, history_limit=10, 
+                                user_id=request.user_id)
+    response = qa_system.run(request.query)
     return {"response": response}
 
 if __name__ == "__main__":

@@ -135,3 +135,5 @@ mlenv/
 *.keras
 *.pkl
 *.csv
+*.json
+*.jsonl
