@@ -76,3 +76,7 @@
     @apply bg-card/50 backdrop-blur-lg border border-white/10 rounded-xl p-6 hover:border-electric-500/50 transition-all duration-300;
   }
 }
+
+body{
+  user-select: none;
+}

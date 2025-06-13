@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, DollarSign, ChartBar, ChartLine } from "lucide-react";
+import { TrendingUp, DollarSign, ChartBar, ChartLine, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 
 const features = [
@@ -10,11 +10,12 @@ const features = [
     description: "Real-time market data with advanced charting tools and technical indicators to make informed decisions.",
     gradient: "from-electric-500 to-electric-600"
   },
+  
   {
-    icon: DollarSign,
-    title: "Zero Commission",
-    description: "Trade stocks, ETFs, and options with zero commission fees. Keep more of your profits.",
-    gradient: "from-neon-500 to-neon-600"
+    icon: ShieldCheck, // Changed icon
+    title: "Reliable & Secure", // Changed title
+    description: "Experience industry-leading uptime and robust security measures to protect your assets and data.", // Changed description
+    gradient: "from-green-500 to-green-600" // Adjusted gradient for a "secure" feel
   },
   {
     icon: ChartBar,
@@ -54,7 +55,7 @@ const itemVariants = {
 
 const FeaturesSection = () => {
   return (
-    <section className="py-20 px-4">
+    <section className="py-20 px-4" id="features">
       <div className="container mx-auto">
         <motion.div 
           className="text-center mb-16"

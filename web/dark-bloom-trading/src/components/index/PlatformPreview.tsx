@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 
 const PlatformPreview = () => {
   return (
-    <section className="py-20 px-4">
+    <section className="py-20 px-4" id="platform">
       <div className="container mx-auto">
         <motion.div 
           className="text-center mb-16"

@@ -64,7 +64,7 @@ const CTASection = () => {
                   whileTap={{ scale: 0.95 }}
                 >
                   <Button size="lg" className="bg-electric-600 hover:bg-electric-700 text-white px-8 py-4 text-lg glow-effect">
-                    Open Free Account
+                    Sign Up Today
                     <TrendingUp className="ml-2 h-5 w-5" />
                   </Button>
                 </motion.div>
@@ -72,10 +72,10 @@ const CTASection = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Button variant="outline" size="lg" className="border-neon-500/50 text-neon-400 hover:bg-neon-500/10 px-8 py-4 text-lg">
+                  {/* <Button variant="outline" size="lg" className="border-neon-500/50 text-neon-400 hover:bg-neon-500/10 px-8 py-4 text-lg">
                     Try Demo
                     <DollarSign className="ml-2 h-5 w-5" />
-                  </Button>
+                  </Button> */}
                 </motion.div>
               </motion.div>
 

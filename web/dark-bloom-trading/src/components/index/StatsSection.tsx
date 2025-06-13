@@ -66,7 +66,7 @@ const itemVariants = {
 
 const StatsSection = () => {
   return (
-    <section className="py-20 px-4 relative">
+    <section className="py-20 px-4 relative" id="stats">
       <div className="absolute inset-0 bg-gradient-to-r from-electric-900/10 via-purple-900/10 to-neon-900/10"></div>
       
       <div className="container mx-auto relative z-10">
