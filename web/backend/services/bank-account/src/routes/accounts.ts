@@ -1,34 +1,8 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import * as accountService from '../services/account-service';
 import * as grpcClient from '../grpc-client';
-
-interface CreateAccountBody {
-  accountType?: string;
-  currency?: string;
-}
-
-interface CreateTransactionBody {
-  type: string;
-  amount: string;
-  description?: string;
-  reference?: string;
-}
-
-interface TransferBody {
-  fromAccountId: string;
-  toAccountId: string;
-  amount: string;
-  description?: string;
-}
-
-interface AccountParams {
-  accountId: string;
-}
-
-interface TransactionQuery {
-  page?: string;
-  limit?: string;
-}
+import { CreateAccountBody, AccountParams, TransferBody, TransactionQuery, CreateTransactionBody } from '../types';
+import * as AccountErrors from '../errors/index';
 
 interface AuthenticatedRequest extends FastifyRequest {
   userId?: string;
@@ -38,20 +12,26 @@ interface AuthenticatedRequest extends FastifyRequest {
 async function authenticate(request: AuthenticatedRequest, reply: FastifyReply): Promise<void> {
   try {
     const token = request.headers.authorization?.replace('Bearer ', '');
+    const refreshtoken= request.headers['x-refresh-token'] as string;
     if (!token) {
-      reply.code(401).send({ error: 'No token provided' });
-      return;
+      throw new AccountErrors.UnauthorizedError('No authorization token provided');
     }
 
-    const validation = await grpcClient.validateToken(token);
+    const validation = await grpcClient.validateToken(token, refreshtoken);
     if (!validation.valid) {
-      reply.code(401).send({ error: 'Invalid token' });
-      return;
+      console.error(validation.error);
+      if (validation.error?.toLowerCase() === 'jwt expired') {
+        throw new AccountErrors.TokenExpiredError('Token has expired');
+      }
+      if (validation.error?.toLowerCase() === 'jwt malformed') {
+        throw new AccountErrors.ValidationError('Malformed token');
+      }
+      throw new AccountErrors.ValidationError('Invalid token');
     }
 
     request.userId = validation.user_id;
   } catch (error: any) {
-    reply.code(401).send({ error: 'Authentication failed' });
+    throw error;
   }
 }
 
@@ -62,7 +42,7 @@ async function accountRoutes(fastify: FastifyInstance): Promise<void> {
   }, async (request: AuthenticatedRequest, reply: FastifyReply) => {
     try {
       if (!request.userId) {
-        return reply.code(401).send({ error: 'User ID not found' });
+        throw new AccountErrors.ValidationError('User ID not found');
       }
 
       const { accountType, currency } = request.body as CreateAccountBody;

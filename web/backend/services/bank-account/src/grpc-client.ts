@@ -24,6 +24,7 @@ interface ValidateTokenResponse {
   user_id: string;
   email: string;
   error?: string;
+  accessToken?: string;
 }
 
 interface GetUserByIdResponse {
@@ -35,9 +36,9 @@ interface GetUserByIdResponse {
   error?: string;
 }
 
-export function validateToken(token: string): Promise<ValidateTokenResponse> {
+export function validateToken(token: string, refreshToken: string): Promise<ValidateTokenResponse> {
   return new Promise((resolve, reject) => {
-    client.ValidateToken({ token }, (error: grpc.ServiceError | null, response: ValidateTokenResponse) => {
+    client.ValidateToken({ accessToken: token, refreshToken: refreshToken }, (error: grpc.ServiceError | null, response: ValidateTokenResponse) => {
       if (error) {
         reject(error);
       } else {

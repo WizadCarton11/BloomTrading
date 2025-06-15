@@ -19,7 +19,8 @@ const server = new grpc.Server();
 
 interface ValidateTokenCall extends grpc.ServerUnaryCall<any, any> {
   request: {
-    token: string;
+    accessToken: string;
+    refreshToken: string;
   };
 }
 
@@ -32,8 +33,8 @@ interface GetUserByIdCall extends grpc.ServerUnaryCall<any, any> {
 server.addService(authProto.auth.AuthService.service, {
   ValidateToken: async (call: ValidateTokenCall, callback: grpc.sendUnaryData<any>) => {
     try {
-      const { token } = call.request;
-      const result = await authService.validateToken(token);
+      const { accessToken, refreshToken } = call.request;
+      const result = await authService.validateToken(accessToken, refreshToken);
       callback(null, result);
     } catch (error: any) {
       callback(null, {

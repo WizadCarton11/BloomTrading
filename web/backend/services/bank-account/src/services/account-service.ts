@@ -1,75 +1,12 @@
 import { PrismaClient, Account, Transaction, AccountType, TransactionType } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
-
+import { CreateAccountData, AccountResponse, CreateTransactionData, TransactionResponse
+, GetTransactionsData, TransactionsWithPagination, TransferFundsData
+, TransferResponse
+ } from './account-object.interface';
 const prisma = new PrismaClient();
 
-interface CreateAccountData {
-  userId: string;
-  accountType: string;
-  currency: string;
-}
 
-interface CreateTransactionData {
-  accountId: string;
-  userId: string;
-  type: string;
-  amount: number;
-  description?: string;
-  reference?: string;
-}
-
-interface GetTransactionsData {
-  accountId: string;
-  userId: string;
-  page: number;
-  limit: number;
-}
-
-interface TransferFundsData {
-  fromAccountId: string;
-  toAccountId: string;
-  userId: string;
-  amount: number;
-  description?: string;
-}
-
-interface AccountResponse {
-  id: string;
-  accountNumber: string;
-  accountType: AccountType;
-  balance: string;
-  currency: string;
-  isActive: boolean;
-  createdAt: Date;
-}
-
-interface TransactionResponse {
-  id: string;
-  accountId: string;
-  type: TransactionType;
-  amount: string;
-  description: string | null;
-  reference: string | null;
-  balanceBefore: string;
-  balanceAfter: string;
-  createdAt: Date;
-}
-
-interface TransactionsWithPagination {
-  transactions: TransactionResponse[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
-
-interface TransferResponse {
-  transferReference: string;
-  fromTransaction: TransactionResponse;
-  toTransaction: TransactionResponse;
-}
 
 class AccountService {
   async createAccount({ userId, accountType, currency }: CreateAccountData): Promise<AccountResponse> {
@@ -82,7 +19,7 @@ class AccountService {
         accountNumber,
         accountType: accountType as AccountType,
         currency,
-        balance: 0.00
+        balance: 10000.00
       }
     });
 

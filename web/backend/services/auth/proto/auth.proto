@@ -8,7 +8,8 @@ service AuthService {
 }
 
 message ValidateTokenRequest {
-  string token = 1;
+  string accessToken = 1;
+  string refreshToken = 2;
 }
 
 message ValidateTokenResponse {
@@ -16,6 +17,7 @@ message ValidateTokenResponse {
   string user_id = 2;
   string email = 3;
   string error = 4;
+  string accessToken = 5;
 }
 
 message GetUserByIdRequest {
