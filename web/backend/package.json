@@ -1,0 +1,26 @@
+{
+  "name": "backend-microservices-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Backend workspace with Fastify microservices, gRPC, and Prisma",
+  "scripts": {
+    "dev:auth": "cd services/auth && npm run dev",
+    "dev:bank": "cd services/bank-account && npm run dev",
+    "dev": "concurrently \"npm run dev:auth\" \"npm run dev:bank\"",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "setup": "cd services/auth && npm install && cd ../bank-account && npm install",
+    "prisma:generate": "cd services/auth && npx prisma generate && cd ../bank-account && npx prisma generate",
+    "prisma:migrate": "cd services/auth && npx prisma migrate dev && cd ../bank-account && npx prisma migrate dev"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.0.1",
+    "@fastify/helmet": "^13.0.1",
+    "@fastify/jwt": "^9.1.0",
+    "@fastify/swagger": "^9.5.1",
+    "dotenv": "^16.5.0"
+  }
+}
