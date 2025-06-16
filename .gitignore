@@ -137,3 +137,5 @@ mlenv/
 *.csv
 *.json
 *.jsonl
+# do not ignore json in locales folder
+!translation.json

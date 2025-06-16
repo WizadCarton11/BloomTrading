@@ -36,7 +36,7 @@ class AuthService {
       });
 
       // Generate tokens
-      const { accessToken, refreshToken } = await this.generateTokens(user.id);
+      const { accessToken, refreshToken } = await this.generateTokens(user.id, email);
 
       return {
         user: {
@@ -77,7 +77,7 @@ class AuthService {
     }
 
     // Generate tokens
-    const { accessToken, refreshToken } = await this.generateTokens(user.id);
+    const { accessToken, refreshToken } = await this.generateTokens(user.id, user.email);
 
     return {
       user: {
@@ -93,14 +93,14 @@ class AuthService {
     };
   }
 
-  async generateTokens(userId: string): Promise<TokenPair> {
+  async generateTokens(userId: string, email: string): Promise<TokenPair> {
     const jwtSecret = process.env.JWT_SECRET;
     if (!jwtSecret) {
         throw new AuthErrors.ValidationError('JWT_SECRET environment variable is not set');
     }
 
     const accessToken = jwt.sign(
-      { userId },
+      { userId, email },
       jwtSecret,
       { expiresIn: '15m' }
     );
@@ -114,7 +114,7 @@ class AuthService {
       data: {
         token: refreshTokenValue,
         userId,
-        expiresAt
+        expiresAt,
       }
     });
 
@@ -127,9 +127,17 @@ class AuthService {
   async validateRefreshToken(refreshToken: string): Promise<TokenPair> {
     // Find refresh token
     const tokenRecord = await prisma.refreshToken.findUnique({
-      where: { token: refreshToken }
+      where: { token: refreshToken },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true
+          }
+        }
+      }
     });
-
+    console.log('Token Record:', tokenRecord);
     if (!tokenRecord) {
       throw new AuthErrors.NotFoundError('Refresh token not found');
     }
@@ -144,7 +152,7 @@ class AuthService {
 
     // Generate new tokens
     const { accessToken, refreshToken: newRefreshToken } = 
-      await this.generateTokens(tokenRecord.userId);
+      await this.generateTokens(tokenRecord.userId, tokenRecord.user.email);
 
     // Delete old refresh token
     // await prisma.refreshToken.delete({
@@ -163,21 +171,21 @@ class AuthService {
       if (!jwtSecret) {
         throw new AuthErrors.ValidationError('JWT_SECRET environment variable is not set');
       }
-      let decoded : { userId: string };
+      let decoded : { userId: string , email: string };
       try {
-        decoded = jwt.verify(accessToken, jwtSecret) as { userId: string };
+        decoded = jwt.verify(accessToken, jwtSecret) as { userId: string , email: string };
 
       } catch (error) {
         console.error('Access token verification failed:', error);
         const tokens = await this.validateRefreshToken(refreshToken);
         accessToken = tokens.accessToken;
-        decoded = jwt.verify(tokens.accessToken, jwtSecret) as { userId: string };
+        decoded = jwt.verify(tokens.accessToken, jwtSecret) as { userId: string , email: string };
       }
-      const user = await this.getUserById(decoded.userId);
+      // const user = await this.getUserById(decoded.userId);
       return {
         valid: true,
-        user_id: user.id,
-        email: user.email,
+        user_id: decoded.userId,
+        email: decoded.email,
         accessToken: accessToken,
       };
     } catch (error: any) {

@@ -1,0 +1,10 @@
+{
+  "errors": {
+    "rateLimitExceeded": "Limite de requêtes dépassée. Réessayez dans {{seconds}} secondes.",
+    "banned": "Vous êtes temporairement banni en raison d'une activité suspecte.",
+    "internalError": "Une erreur est survenue !",
+    "notFound": "La ressource demandée est introuvable.",
+    "unauthorized": "Vous n'êtes pas autorisé à accéder à cette ressource."
+  },
+  "healthCheck": "Le service d'authentification est opérationnel"
+}

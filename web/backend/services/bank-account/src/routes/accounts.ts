@@ -3,9 +3,11 @@ import * as accountService from '../services/account-service';
 import * as grpcClient from '../grpc-client';
 import { CreateAccountBody, AccountParams, TransferBody, TransactionQuery, CreateTransactionBody } from '../types';
 import * as AccountErrors from '../errors/index';
+import { access } from 'fs';
 
 interface AuthenticatedRequest extends FastifyRequest {
   userId?: string;
+  accessToken?: string;
 }
 
 // Auth middleware
@@ -30,6 +32,7 @@ async function authenticate(request: AuthenticatedRequest, reply: FastifyReply):
     }
 
     request.userId = validation.user_id;
+    request.accessToken = validation.accessToken;
   } catch (error: any) {
     throw error;
   }
@@ -53,7 +56,11 @@ async function accountRoutes(fastify: FastifyInstance): Promise<void> {
         currency: currency || 'USD'
       });
 
-      reply.code(201).send(account);
+      reply.code(201).send({
+        
+        accessToken: request.accessToken,
+        data: {...account, userId: request.userId}
+      });
     } catch (error: any) {
       console.error(error);
       reply.code(400).send({ error: error.message });
@@ -70,7 +77,10 @@ async function accountRoutes(fastify: FastifyInstance): Promise<void> {
       }
 
       const accounts = await accountService.getUserAccounts(request.userId);
-      reply.send(accounts);
+      reply.send({
+        accessToken: request.accessToken,
+        data: accounts
+      });
     } catch (error: any) {
       reply.code(500).send({ error: error.message });
     }
@@ -87,7 +97,10 @@ async function accountRoutes(fastify: FastifyInstance): Promise<void> {
 
       const { accountId } = request.params as any;
       const account = await accountService.getAccountById(accountId, request.userId);
-      reply.send(account);
+      reply.send({
+        accessToken: request.accessToken,
+        data: account
+      });
     } catch (error: any) {
       reply.code(404).send({ error: error.message });
     }
@@ -120,7 +133,10 @@ async function accountRoutes(fastify: FastifyInstance): Promise<void> {
         reference
       });
 
-      reply.code(201).send(transaction);
+      reply.code(201).send({
+        accessToken: request.accessToken,
+        data: transaction
+      });
     } catch (error: any) {
       reply.code(400).send({ error: error.message });
     }
@@ -145,7 +161,10 @@ async function accountRoutes(fastify: FastifyInstance): Promise<void> {
         limit: parseInt(limit)
       });
 
-      reply.send(transactions);
+      reply.send({
+        accessToken: request.accessToken,
+        data: transactions
+      });
     } catch (error: any) {
       reply.code(500).send({ error: error.message });
     }
@@ -176,7 +195,10 @@ async function accountRoutes(fastify: FastifyInstance): Promise<void> {
         description
       });
 
-      reply.send(transfer);
+      reply.send({
+        accessToken: request.accessToken,
+        data: transfer
+      });
     } catch (error: any) {
       reply.code(400).send({ error: error.message });
     }
