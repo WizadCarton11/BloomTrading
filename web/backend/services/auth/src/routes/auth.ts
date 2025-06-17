@@ -16,6 +16,7 @@ import {
   validateBody, 
   authenticateToken, 
 } from '../middleware';
+import i18next from 'i18next';
 
 async function authRoutes(fastify: FastifyInstance): Promise<void> {
   // Register user
@@ -31,12 +32,23 @@ async function authRoutes(fastify: FastifyInstance): Promise<void> {
         firstName,
         lastName
       });
-      console.log('Registration result:', result);
-
-      reply.code(201).send(result);
+      const lang= request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);
+      reply.code(201).send({ 
+        message: t('user.register.success'),
+        data: result
+      });
     } catch (error: any) {
       console.error('Registration route error:', error);
-      return error;
+      const lang= request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);
+      return {
+        message: t(error.metadata.langKey || 'user.register.error'),
+        error: error.message || 'An error occurred during registration',
+        statusCode: error.statusCode || 500,
+        code: error.code || 'INTERNAL_SERVER_ERROR',
+        details: error.details || null
+      } as any;
     }
   });
 
@@ -48,10 +60,23 @@ async function authRoutes(fastify: FastifyInstance): Promise<void> {
       const { email, password } = request.body;
 
       const result = await authService.login({ email, password });
-      reply.send(result);
+      const lang= request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);
+      reply.send({
+        message: t('user.login.success'),
+        data: result
+      });
     } catch (error: any) {
       console.error('Login route error:', error);
-      return error;
+      const lang= request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);
+      return {
+        message: t(error.metadata.langKey || 'user.login.error'),
+        error: error.message || 'An error occurred during login',
+        statusCode: error.statusCode || 500,
+        code: error.code || 'INTERNAL_SERVER_ERROR',
+        details: error.details || null
+      } as any;
     }
   });
 
@@ -63,10 +88,23 @@ async function authRoutes(fastify: FastifyInstance): Promise<void> {
       const { refreshToken } = request.body;
 
       const result = await authService.validateRefreshToken(refreshToken);
-      reply.send(result);
+      const lang= request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);
+      reply.send({
+        message: t('user.refresh.success'),
+        data: result
+      });
     } catch (error: any) {
       console.error('Refresh token route error:', error);
-      return error;
+      const lang= request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);
+      return {
+        message: t(error.metadata.langKey || 'user.refresh.error'),
+        error: error.message || 'An error occurred during token refresh',
+        statusCode: error.statusCode || 500,
+        code: error.code || 'INTERNAL_SERVER_ERROR',
+        details: error.details || null
+      } as any;
     }
   });
 
@@ -88,11 +126,23 @@ async function authRoutes(fastify: FastifyInstance): Promise<void> {
         isActive: user.isActive,
         createdAt: user.createdAt
       };
-      
-      reply.send(userResponse);
+      const lang= request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);
+      reply.send({
+        message: t('user.get.success'),
+        data: userResponse
+      });
     } catch (error: any) {
       console.error('Get current user route error:', error);
-      return error;
+      const lang= request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);
+      return {
+        message: t(error.metadata.langKey || 'user.get.error'),
+        error: error.message || 'An error occurred while fetching user data',
+        statusCode: error.statusCode || 500,
+        code: error.code || 'INTERNAL_SERVER_ERROR',
+        details: error.details || null
+      } as any;
     }
   });
 }

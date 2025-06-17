@@ -1,10 +1,18 @@
 {
   "errors": {
-    "rateLimitExceeded": "Limite de requêtes dépassée. Réessayez dans {{seconds}} secondes.",
+    "rateLimitExceeded": "Limite de tentatives dépassée. Réessayez dans {{seconds}}s.",
     "banned": "Vous êtes temporairement banni en raison d'une activité suspecte.",
-    "internalError": "Une erreur est survenue !",
-    "notFound": "La ressource demandée est introuvable.",
+    "internalError": "Une erreur s'est produite !",
+    "notFound": "La ressource demandée n'a pas été trouvée.",
     "unauthorized": "Vous n'êtes pas autorisé à accéder à cette ressource."
   },
-  "healthCheck": "Le service d'authentification est opérationnel"
+  "healthCheck": "Le service d'authentification fonctionne correctement",
+  "user": {
+    "register": {
+      "success": "Utilisateur enregistré avec succès",
+      "exists": "L'utilisateur existe déjà",
+      "failure": "L'inscription a échoué",
+      "emailExists": "Cette adresse email est déjà utilisée"
+    }
+  }
 }

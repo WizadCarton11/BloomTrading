@@ -1,8 +1,8 @@
 {
-  "name": "bank-account-service",
+  "name": "stock-service",
   "version": "1.0.0",
   "private": true,
-  "description": "Bank account microservice with Fastify and gRPC",
+  "description": "Stock microservice with Fastify and gRPC",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",

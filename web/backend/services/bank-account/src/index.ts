@@ -3,9 +3,10 @@ import fastify, { FastifyInstance, FastifyRequest } from 'fastify'
 import pino from 'pino';
 import { CustomError } from './errors/custom.error';
 import Redis from 'ioredis';
-
-
-
+import { initI18n } from './i18';
+import { RateLimitOptions, RateLimitErrorContext } from './index.interface';
+import i18next from 'i18next';
+import * as grpcServer from './grpc-server';
 const redisClient = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
@@ -32,39 +33,13 @@ const app = fastify({
         }
       }
 });
+app.addHook('preHandler', async (request, reply) => {
+  const lang = request.headers['accept-language']?.split(',')[0] || 'en';
+  request.headers['x-lang'] = lang; // Optional: attach to header for reuse
+});
 
 // Define interfaces for rate limit options
-interface RateLimitErrorContext {
-  statusCode: number;
-  error: string;
-  limit: number;
-  remaining: number;
-  reset: number;
-  ttl: number;
-  ban?: boolean;
-}
 
-interface BanOptions {
-  duration: number;
-  max: number;
-  keyGenerator: (request: FastifyRequest) => string;
-  redis: Redis;
-}
-
-interface RateLimitOptions {
-  max: number;
-  timeWindow: string | number;
-  keyGenerator: (request: FastifyRequest) => string;
-  redis: Redis;
-  ban: BanOptions;
-  skipOnError: boolean;
-  skip: (request: FastifyRequest) => boolean;
-  errorResponseBuilder: (req: FastifyRequest, context: RateLimitErrorContext) => {
-    statusCode: number;
-    error: string;
-    message: string;
-  };
-}
 
 app.register(require('@fastify/rate-limit'), {
   max: 1000, 
@@ -152,15 +127,18 @@ async function loadRoutes(): Promise<void> {
 
 // Health check
 app.get('/health', async (request, reply) => {
-  return { status: 'healthy', service: 'bank-account-service' };
+  const lang = request.headers['x-lang'] || 'en';
+  const t = i18next.getFixedT(lang);
+  return { status: 'healthy', service: t('healthCheck') };
 });
 
 async function start(): Promise<void> {
   try {
     // Load plugins and routes
+    await initI18n();
     await loadPlugins();
     await loadRoutes();
-    
+    grpcServer.start();
     // Start HTTP server
     const port = parseInt(process.env.HTTP_PORT || '3002');
     await app.listen({ port, host: '0.0.0.0' });

@@ -4,6 +4,9 @@ import { CreateAccountData, AccountResponse, CreateTransactionData, TransactionR
 , GetTransactionsData, TransactionsWithPagination, TransferFundsData
 , TransferResponse
  } from './account-object.interface';
+import * as AccountErrors from '../errors/index';
+import { bindAllMethods } from '../utils/bind-all-methods';
+
 const prisma = new PrismaClient();
 
 
@@ -66,7 +69,7 @@ class AccountService {
     });
 
     if (!account) {
-      throw new Error('Account not found');
+      throw new AccountErrors.AccountNotFoundError(accountId, { langKey: 'account.get.notFound' });
     }
 
     return {
@@ -91,14 +94,14 @@ class AccountService {
     });
 
     if (!account) {
-      throw new Error('Account not found');
+      throw new AccountErrors.AccountNotFoundError(accountId, { langKey: 'account.transaction.notFound' });
     }
 
     const currentBalance = parseFloat(account.balance.toString());
 
     // Validate transaction
     if (type === 'WITHDRAWAL' && currentBalance < amount) {
-      throw new Error('Insufficient funds');
+      throw new AccountErrors.ValidationError('Insufficient funds', { langKey: 'account.transaction.insufficientFunds' });
     }
 
     // Calculate new balance
@@ -306,9 +309,17 @@ class AccountService {
 
 const accountServiceInstance = new AccountService();
 
-export const createAccount = accountServiceInstance.createAccount.bind(accountServiceInstance);
-export const getUserAccounts = accountServiceInstance.getUserAccounts.bind(accountServiceInstance);
-export const getAccountById = accountServiceInstance.getAccountById.bind(accountServiceInstance);
-export const createTransaction = accountServiceInstance.createTransaction.bind(accountServiceInstance);
-export const getAccountTransactions = accountServiceInstance.getAccountTransactions.bind(accountServiceInstance);
-export const transferFunds = accountServiceInstance.transferFunds.bind(accountServiceInstance);
+// export const createAccount = accountServiceInstance.createAccount.bind(accountServiceInstance);
+// export const getUserAccounts = accountServiceInstance.getUserAccounts.bind(accountServiceInstance);
+// export const getAccountById = accountServiceInstance.getAccountById.bind(accountServiceInstance);
+// export const createTransaction = accountServiceInstance.createTransaction.bind(accountServiceInstance);
+// export const getAccountTransactions = accountServiceInstance.getAccountTransactions.bind(accountServiceInstance);
+// export const transferFunds = accountServiceInstance.transferFunds.bind(accountServiceInstance);
+export const {
+  createAccount,
+  getUserAccounts,
+  getAccountById,
+  createTransaction,
+  getAccountTransactions,
+  transferFunds
+}= bindAllMethods(accountServiceInstance);

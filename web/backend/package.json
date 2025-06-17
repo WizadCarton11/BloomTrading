@@ -6,7 +6,8 @@
   "scripts": {
     "dev:auth": "cd services/auth && npm run dev",
     "dev:bank": "cd services/bank-account && npm run dev",
-    "dev": "concurrently \"npm run dev:auth\" \"npm run dev:bank\"",
+    "dev:stock": "cd services/stock && npm run dev",
+    "dev": "concurrently \"npm run dev:auth\" \"npm run dev:bank\" \"npm run dev:stock\"",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "setup": "cd services/auth && npm install && cd ../bank-account && npm install",

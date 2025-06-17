@@ -1,0 +1,18 @@
+{
+  "errors": {
+    "rateLimitExceeded": "Rate limit exceeded. Try again in {{seconds}}s.",
+    "banned": "You are temporarily banned due to suspicious activity.",
+    "internalError": "Something went wrong!",
+    "notFound": "The requested resource was not found.",
+    "unauthorized": "You are not authorized to access this resource."
+  },
+  "healthCheck": "Stock service is healthy",
+  "account":{
+    "get":{
+      "success": "Account retrieved successfully",
+      "failure": "Account retrieval failed",
+      "error": "Account retrieval error",
+      "notFound": "Account not found"
+    }
+  }
+}

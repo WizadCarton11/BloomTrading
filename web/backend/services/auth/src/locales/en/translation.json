@@ -6,5 +6,34 @@
     "notFound": "The requested resource was not found.",
     "unauthorized": "You are not authorized to access this resource."
   },
-  "healthCheck": "Auth service is healthy"
+  "healthCheck": "Auth service is healthy",
+  "user": {
+    "register": {
+      "success": "User registered successfully",
+      "exists": "User already exists",
+      "failure": "User registration failed",
+      "emailExists": "Email already exists",
+      "error": "User registration error"
+    },
+    "login":{
+      "invalidCredentials": "Invalid email or password",
+      "success": "User logged in successfully",
+      "failure": "User login failed",
+      "error": "User login error",
+      "userNotFound": "User not found"
+    },
+    "refresh":{
+      "success": "User token refreshed successfully",
+      "failure": "User token refresh failed",
+      "error": "User token refresh error",
+      "tokenNotFound": "Refresh token not found",
+      "tokenExpired": "Refresh token expired"
+    },
+    "get":{
+      "success": "User data retrieved successfully",
+      "failure": "User data retrieval failed",
+      "error": "User data retrieval error",
+      "userNotFound": "User not found"
+    }
+  }
 }

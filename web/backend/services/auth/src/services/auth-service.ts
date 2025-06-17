@@ -5,12 +5,12 @@ import { PrismaClient, User } from '@prisma/client';
 import { RegisterData, LoginData, AuthResponse, TokenPair, TokenValidation } from '../types/auth.types';
 import * as AuthErrors from '../errors/index';
 import { bindAllMethods } from '../utils/bind-all-methods';
+import i18next from 'i18next';
 
 const prisma = new PrismaClient();
 class AuthService {
   async register({ email, password, firstName, lastName }: RegisterData): Promise<AuthResponse> {
     try {
-
       // Check if user already exists
       const existingUser = await prisma.user.findUnique({
         where: { email }
@@ -18,7 +18,7 @@ class AuthService {
 
       if (existingUser) {
         console.log('User already exists with this email');
-        throw new AuthErrors.EmailAlreadyExistsError(email);
+        throw new AuthErrors.EmailAlreadyExistsError(email, { langKey: 'user.register.emailExists' });
       }
 
       // Hash password
@@ -51,7 +51,7 @@ class AuthService {
         refreshToken
       };
     } catch (error: any) {
-      console.error('Registration Service error:', error);
+      // console.error('Registration Service error:', error);
       throw error;
     }
   }
@@ -63,7 +63,7 @@ class AuthService {
     });
 
     if (!user) {
-      throw new AuthErrors.UserNotFoundError(email);
+      throw new AuthErrors.UserNotFoundError(email, { langKey: 'user.login.userNotFound' });
     }
 
     if (!user.isActive) {
@@ -73,12 +73,11 @@ class AuthService {
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      throw new AuthErrors.InvalidCredentialsError();
+      throw new AuthErrors.InvalidCredentialsError({ langKey: 'user.login.invalidCredentials' });
     }
 
     // Generate tokens
     const { accessToken, refreshToken } = await this.generateTokens(user.id, user.email);
-
     return {
       user: {
         id: user.id,
@@ -137,9 +136,8 @@ class AuthService {
         }
       }
     });
-    console.log('Token Record:', tokenRecord);
     if (!tokenRecord) {
-      throw new AuthErrors.NotFoundError('Refresh token not found');
+      throw new AuthErrors.NotFoundError('Refresh token not found', { langKey: 'user.refresh.tokenNotFound' });
     }
 
     if (new Date() > tokenRecord.expiresAt) {
@@ -147,7 +145,7 @@ class AuthService {
       await prisma.refreshToken.delete({
         where: { token: refreshToken }
       });
-      throw new AuthErrors.ValidationError('Refresh token expired');
+      throw new AuthErrors.ValidationError('Refresh token expired', { langKey: 'user.refresh.tokenExpired' });
     }
 
     // Generate new tokens
@@ -204,7 +202,7 @@ class AuthService {
     });
 
     if (!user) {
-      throw new AuthErrors.UserNotFoundError(userId);
+      throw new AuthErrors.UserNotFoundError(userId, { langKey: 'user.get.userNotFound' });
     }
 
     return user;
