@@ -139,3 +139,4 @@ mlenv/
 # do not ignore json in locales folder
 !translation.json
 Data/data.json
+REDIS_gpt_guide.md

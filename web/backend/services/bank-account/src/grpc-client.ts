@@ -48,6 +48,7 @@ export function validateToken(token: string, refreshToken: string): Promise<Vali
   return new Promise((resolve, reject) => {
     authClient.ValidateToken({ accessToken: token, refreshToken: refreshToken }, (error: grpc.ServiceError | null, response: ValidateTokenResponse) => {
       if (error) {
+        console.error('Error validating token:', error);
         reject(error);
       } else {
         resolve(response);

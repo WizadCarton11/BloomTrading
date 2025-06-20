@@ -1,3 +1,4 @@
+import { Decimal } from '@prisma/client/runtime/library';
 import { CustomError } from './custom.error';
 
 /** Generic 404 Error */
@@ -28,6 +29,12 @@ export class ForbiddenError extends CustomError {
   }
 }
 
+export class InvalidRefreshTokenError extends CustomError {
+  constructor(metadata: any = {}) {
+    super('Invalid or expired refresh token', 401, 'INVALID_REFRESH_TOKEN', metadata);
+  }
+}
+
 /** Account already exists */
 export class AccountAlreadyExistsError extends CustomError {
   constructor(accountId: string, metadata: any = {}) {
@@ -42,7 +49,7 @@ export class AccountNotFoundError extends CustomError {
 }
 /** Insufficient funds for transaction */
 export class InsufficientFundsError extends CustomError {
-  constructor(accountId: string, amount: number, metadata: any = {}) {
+  constructor(accountId: string, amount: Decimal, metadata: any = {}) {
     super(`Insufficient funds for account ${accountId} to withdraw ${amount}`, 400, 'INSUFFICIENT_FUNDS', { accountId, amount, ...metadata });
   }
 }

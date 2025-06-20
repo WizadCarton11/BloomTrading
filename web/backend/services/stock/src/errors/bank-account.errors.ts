@@ -142,3 +142,8 @@ export class TokenValidationError extends CustomError {
     super(message, 401, 'TOKEN_VALIDATION_ERROR', metadata);
   }
 }
+export class InvalidRefreshTokenError extends CustomError {
+  constructor(message = 'Invalid or expired refresh token', metadata: any = {}) {
+    super(message, 401, 'INVALID_REFRESH_TOKEN', metadata);
+  }
+}

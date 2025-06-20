@@ -123,6 +123,18 @@ class AuthService {
     };
   }
 
+  async generateAccessToken(userId: string, email: string): Promise<string> {
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new AuthErrors.ValidationError('JWT_SECRET environment variable is not set');
+    }
+    return jwt.sign(
+      { userId, email },
+      jwtSecret,
+      { expiresIn: '15m' } // 15 minutes
+    );
+  }
+
   async validateRefreshToken(refreshToken: string): Promise<TokenPair> {
     // Find refresh token
     const tokenRecord = await prisma.refreshToken.findUnique({
@@ -137,20 +149,20 @@ class AuthService {
       }
     });
     if (!tokenRecord) {
-      throw new AuthErrors.NotFoundError('Refresh token not found', { langKey: 'user.refresh.tokenNotFound' });
+      throw new AuthErrors.InvalidRefreshTokenError({ langKey: 'user.refresh.tokenNotFound' });
     }
 
-    if (new Date() > tokenRecord.expiresAt) {
+    if (new Date() > tokenRecord.expiresAt ) {
       // Delete expired token
       await prisma.refreshToken.delete({
         where: { token: refreshToken }
       });
-      throw new AuthErrors.ValidationError('Refresh token expired', { langKey: 'user.refresh.tokenExpired' });
+      throw new AuthErrors.InvalidRefreshTokenError({ langKey: 'user.refresh.tokenExpired' });
     }
 
-    // Generate new tokens
-    const { accessToken, refreshToken: newRefreshToken } = 
-      await this.generateTokens(tokenRecord.userId, tokenRecord.user.email);
+    // Generate new token
+    const accessToken = 
+      await this.generateAccessToken(tokenRecord.userId, tokenRecord.user.email);
 
     // Delete old refresh token
     // await prisma.refreshToken.delete({
@@ -159,7 +171,7 @@ class AuthService {
 
     return {
       accessToken,
-      refreshToken: newRefreshToken
+      refreshToken: refreshToken
     };
   }
 
@@ -171,10 +183,11 @@ class AuthService {
       }
       let decoded : { userId: string , email: string };
       try {
+        // throw new Error('Simulated error for testing purposes'); // Simulate an error to test refresh token logic
         decoded = jwt.verify(accessToken, jwtSecret) as { userId: string , email: string };
 
       } catch (error) {
-        console.error('Access token verification failed:', error);
+        console.error('Auth->ValidateToken->Access token verification failed:', error);
         const tokens = await this.validateRefreshToken(refreshToken);
         accessToken = tokens.accessToken;
         decoded = jwt.verify(tokens.accessToken, jwtSecret) as { userId: string , email: string };

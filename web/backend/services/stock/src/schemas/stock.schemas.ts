@@ -61,26 +61,6 @@ export const nameSchema = z
 //#endregion
 
 //#region Request body validation schemas
-export const registerSchema = z.object({
-  email: emailSchema,
-  password: stringSchema,
-  firstName: nameSchema,
-  lastName: nameSchema.optional()
-});
-
-export const loginSchema = z.object({
-  email: emailSchema,
-  password: z.string().min(1, { message: 'Password is required' })
-});
-
-export const refreshTokenSchema = z.object({
-  refreshToken: z
-    .string()
-    .min(1, { message: 'Refresh token is required' })
-    .regex(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]*$/, {
-      message: 'Invalid refresh token format'
-    })
-});
 
 //#endregion
 
@@ -91,6 +71,3 @@ export const authHeaderSchema = z
     message: 'Invalid authorization header format'
   });
 // Export types derived from schemas
-export type RegisterRequest = z.infer<typeof registerSchema>;
-export type LoginRequest = z.infer<typeof loginSchema>;
-export type RefreshTokenRequest = z.infer<typeof refreshTokenSchema>;

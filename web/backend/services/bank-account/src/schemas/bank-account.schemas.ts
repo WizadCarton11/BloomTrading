@@ -81,6 +81,19 @@ export const refreshTokenSchema = z.object({
       message: 'Invalid refresh token format'
     })
 });
+export const createAccountSchema = z.object({
+  userId: uuidSchema
+  .optional() 
+  ,
+  currency: z
+    .string()
+    .min(3, { message: 'Currency code must be at least 3 characters long' })
+    .max(3, { message: 'Currency code cannot exceed 3 characters' })
+    .regex(/^[A-Z]{3}$/, {
+      message: 'Currency code must be a valid 3-letter ISO currency code'
+    })
+    .default('INR')
+});
 
 //#endregion
 
@@ -94,3 +107,4 @@ export const authHeaderSchema = z
 export type RegisterRequest = z.infer<typeof registerSchema>;
 export type LoginRequest = z.infer<typeof loginSchema>;
 export type RefreshTokenRequest = z.infer<typeof refreshTokenSchema>;
+export type CreateAccountRequest = z.infer<typeof createAccountSchema>;

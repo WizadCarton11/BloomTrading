@@ -1,33 +1,3 @@
 syntax = "proto3";
 
-package bank;
-
-service BankService {
-  rpc GetAccountBalance (GetAccountBalanceRequest) returns (GetAccountBalanceResponse);
-  rpc CreateTransaction (CreateTransactionRequest) returns (CreateTransactionResponse);
-}
-
-message GetAccountBalanceRequest {
-  string account_id = 1;
-}
-
-message GetAccountBalanceResponse {
-  string account_id = 1;
-  string balance = 2;
-  string currency = 3;
-  string error = 4;
-}
-
-message CreateTransactionRequest {
-  string account_id = 1;
-  string type = 2;
-  string amount = 3;
-  string description = 4;
-  string reference = 5;
-}
-
-message CreateTransactionResponse {
-  string transaction_id = 1;
-  string new_balance = 2;
-  string error = 3;
-}
+package stock;

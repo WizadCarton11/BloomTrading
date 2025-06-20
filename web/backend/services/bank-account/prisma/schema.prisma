@@ -10,47 +10,46 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// banking/prisma/schema.prisma
+
 model Account {
-  id            String        @id @default(uuid())
-  userId        String
-  accountNumber String        @unique
-  accountType   AccountType   @default(CHECKING)
-  balance       Decimal       @default(0.00) @db.Decimal(12, 2)
-  currency      String        @default("USD")
-  isActive      Boolean       @default(true)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-
-  transactions Transaction[]
-
-  @@map("accounts")
+  id            String    @id @default(uuid())
+  userId        String    @unique
+  balance       Decimal   @default(0.0)
+  lockedBalance Decimal   @default(0.0)
+  currency      String    @default("INR")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  accountNumber String   @unique
+  isActive      Boolean   @default(true)
+  transactions  Transaction[]
 }
 
 model Transaction {
-  id          String          @id @default(uuid())
-  accountId   String
-  type        TransactionType
-  amount      Decimal         @db.Decimal(12, 2)
-  description String?
-  reference   String?
-  balanceBefore Decimal       @db.Decimal(12, 2)
-  balanceAfter  Decimal       @db.Decimal(12, 2)
-  createdAt   DateTime        @default(now())
-
-  account Account @relation(fields: [accountId], references: [id])
-
-  @@map("transactions")
-}
-
-enum AccountType {
-  CHECKING
-  SAVINGS
-  CREDIT
+  id            String    @id @default(uuid())
+  accountId     String
+  type          TransactionType
+  amount        Decimal
+  status        TransactionStatus @default(PENDING)
+  externalTxnId String?   @unique
+  reference     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  description  String?
+  // Optional fields for reversals
+  account       Account   @relation(fields: [accountId], references: [id])
 }
 
 enum TransactionType {
-  DEPOSIT
-  WITHDRAWAL
-  TRANSFER_IN
-  TRANSFER_OUT
+  DEBIT
+  CREDIT
+  HOLD     // for reserving funds
+  RELEASE  // release hold
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REVERSED
 }

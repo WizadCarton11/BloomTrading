@@ -1,7 +1,6 @@
 import { FastifyRequest } from 'fastify';
 
 export interface CreateAccountBody {
-  accountType?: string;
   currency?: string;
 }
 

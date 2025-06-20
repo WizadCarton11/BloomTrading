@@ -1,4 +1,4 @@
-import { PrismaClient, Account, Transaction, AccountType, TransactionType } from '@prisma/client';
+import { PrismaClient, Account, Transaction, TransactionType } from '@prisma/client';
 export interface CreateAccountData {
   userId: string;
   accountType: string;
@@ -32,7 +32,6 @@ export interface TransferFundsData {
 export interface AccountResponse {
   id: string;
   accountNumber: string;
-  accountType: AccountType;
   balance: string;
   currency: string;
   isActive: boolean;

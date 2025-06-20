@@ -8,6 +8,12 @@
   },
   "healthCheck": "Bank service is healthy",
   "account":{
+    "create":{
+      "success": "Account created successfully",
+      "failure": "Account creation failed",
+      "error": "Account creation error",
+      "exists": "Account already exists"
+    },
     "get":{
       "success": "Account retrieved successfully",
       "failure": "Account retrieval failed",
