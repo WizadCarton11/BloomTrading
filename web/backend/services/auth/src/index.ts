@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import fastify, { FastifyInstance, FastifyRequest } from 'fastify';
+import fastify, { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import * as grpcServer from './grpc-server';
 import pino from 'pino';
 import fastifySwagger from '@fastify/swagger';
@@ -9,6 +9,7 @@ import Redis from 'ioredis';
 import { RateLimitOptions, RateLimitErrorContext } from './index.interface';
 import i18next from 'i18next';
 import { initI18n } from './i18';
+import '@fastify/cookie';
 
 const redisClient = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
@@ -32,6 +33,43 @@ const app = fastify({
     }
   }
 });
+
+app.register(require('@fastify/cookie'), {
+  secret: "my-secret", // for cookies signature
+  hook: 'onRequest', // set to false to disable cookie autoparsing or set autoparsing on any of the following hooks: 'onRequest', 'preParsing', 'preHandler', 'preValidation'. default: 'onRequest'
+  parseOptions: {}  // options for parsing cookies
+})
+
+async function loadPlugins(): Promise<void> {
+  interface CorsOriginCallback {
+    (error: Error | null, allow: boolean): void;
+  }
+
+  interface CorsOptions {
+    origin: (origin: string | undefined, cb: CorsOriginCallback) => void;
+    credentials: boolean;
+  }
+
+  await app.register(require('@fastify/cors'), {
+    origin: (origin: string | undefined, cb: CorsOriginCallback) => {
+      const allowedOrigins: string[] = ['http://localhost:3000', 'https://yourfrontend.com'];
+      if (!origin || allowedOrigins.includes(origin)) {
+        cb(null, true);
+      } else {
+        console.warn(`CORS request from disallowed origin: ${origin}`);
+        cb(new Error("Not allowed by CORS"), false);
+      }
+    },
+    credentials: true
+  } as CorsOptions);
+
+  // await app.register(require('@fastify/cors'), {
+  //   origin: '*',
+  //   credentials: true,
+  // });
+  
+  await app.register(require('@fastify/helmet'));
+}
 app.addHook('preHandler', async (request, reply) => {
   const lang = request.headers['accept-language']?.split(',')[0] || 'en';
   request.headers['x-lang'] = lang; // Optional: attach to header for reuse
@@ -44,7 +82,7 @@ app.register(require('@fastify/rate-limit'), {
     return request.ip;
   },
   redis: redisClient,
-  allowList: ['127.0.0.1'], // Allow local requests without rate limiting
+  allowList: ['*'], // Allow local requests without rate limiting
   ban: {
     duration: 60 * 60 * 1000, // Ban for 1 hour
     max: 1, // Ban after 10 failed attempts
@@ -77,12 +115,14 @@ app.register(require('@fastify/rate-limit'), {
 
 app.setErrorHandler((error, request, reply) => {
   // console.error('Error caught:', error);
-
+      const lang= request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);
   if (error instanceof CustomError) {
     const response: any = {
       statusCode: error.statusCode,
       error: error.code,
-      message: error.message,
+
+      message: t(error.metadata.langKey),
       timestamp: error.timestamp,
       metadata: error.metadata,
     };
@@ -102,19 +142,13 @@ app.setErrorHandler((error, request, reply) => {
   });
 });
 
-async function loadPlugins(): Promise<void> {
-  await app.register(require('@fastify/cors'), {
-    origin: true
-  });
-  
-  await app.register(require('@fastify/helmet'));
-}
+
 
 async function loadRoutes(): Promise<void> {
   await app.register(require('./routes/auth'), { prefix: '/api/auth' });
 }
 
-app.get('/health', async (request, reply) => {
+app.get('/health', async (request: FastifyRequest, reply: FastifyReply) => {
   const lang = request.headers['x-lang'] || 'en';
   const t = i18next.getFixedT(lang);
   return { status: 'healthy', service: t('healthCheck') };

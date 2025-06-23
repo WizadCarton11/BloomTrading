@@ -19,6 +19,18 @@ export default {
 			}
 		},
 		extend: {
+			// animation: {
+			// 	gradient: 'gradient 8s linear infinite',
+			// },
+			// keyframes: {
+			// 	gradient: {
+			// 		'0%, 100%': { backgroundPosition: '0% 50%' },
+			// 		'50%': { backgroundPosition: '100% 50%' },
+			// 	},
+			// },
+			backgroundSize: {
+				'300%': '300%',
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -107,6 +119,14 @@ export default {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			keyframes: {
+				'gradient': {
+					'0%, 100%': {
+						'background-position': '0% 50%'
+					},
+					'50%': {
+						'background-position': '100% 50%'
+					}
+				},
 				'accordion-down': {
 					from: {
 						height: '0'
@@ -148,7 +168,8 @@ export default {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
-				'slide-up': 'slide-up 0.6s ease-out'
+				'slide-up': 'slide-up 0.6s ease-out',
+				'gradient': 'gradient 8s linear infinite'
 			}
 		}
 	},

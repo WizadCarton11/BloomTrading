@@ -32,7 +32,7 @@ export function HeroSection() {
       <div className="max-w-7xl mx-auto text-center">
         <div className="mb-8">
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
-            Welcome to <span className="text-emerald-400">TradePro</span>
+             <span className="animate-gradient bg-gradient-to-r from-purple-500 via-fuchsia-500 to-blue-500 transition-all duration-1050 bg-clip-text text-transparent bg-300% font-extrabold">DarkBloom Trading</span>
           </h1>
           <div className="h-16 flex items-center justify-center">
             <p 
@@ -45,7 +45,7 @@ export function HeroSection() {
           </div>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+        {/* <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
           <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 text-lg">
             Start Tradingaaa
             <ArrowRight className="ml-2 h-5 w-5" />
@@ -54,7 +54,7 @@ export function HeroSection() {
             Learn More
             <TrendingUp className="ml-2 h-5 w-5" />
           </Button>
-        </div>
+        </div> */}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700">

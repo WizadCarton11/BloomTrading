@@ -187,7 +187,6 @@ class AuthService {
         decoded = jwt.verify(accessToken, jwtSecret) as { userId: string , email: string };
 
       } catch (error) {
-        console.error('Auth->ValidateToken->Access token verification failed:', error);
         const tokens = await this.validateRefreshToken(refreshToken);
         accessToken = tokens.accessToken;
         decoded = jwt.verify(tokens.accessToken, jwtSecret) as { userId: string , email: string };

@@ -36,19 +36,28 @@ export function validateBody<T>(schema: ZodSchema<T>) {
 /**
  * Validates and extracts user from Authorization header
  */
-export async function authenticateToken(request: AuthenticatedRequest, reply: FastifyReply) {
+export async function authenticateToken(request: FastifyRequest & Partial<AuthenticatedRequest>, reply: FastifyReply) {
   try {
-    const authHeader = request.headers.authorization;
-    
-    if (!authHeader) {
-      return reply.code(401).send({ error: 'No authorization header provided' });
+
+    // const authHeader = request.headers.authorization;
+    const authAccessToken = request.cookies['accessToken'] || request.headers.authorization;
+    const authRefreshToken = request.cookies['refreshToken'] || request.headers['x-refresh-token'];
+    if (!authAccessToken) {
+        const validation = await authService.validateToken("", authRefreshToken);
+        if (!validation.valid) {
+          return reply.code(401).send({ error: 'Invalid token' });
+        }
+        request.userId = validation.user_id;
+        request.accessToken = validation.accessToken;
+        
+        return;
     }
 
     // Validate header format
-    const validatedHeader = authHeaderSchema.parse(authHeader);
+    const validatedHeader = authHeaderSchema.parse(authAccessToken);
     const token = validatedHeader.replace('Bearer ', '');
 
-    const validation = await authService.validateToken(token);
+    const validation = await authService.validateToken(token, authRefreshToken);
     if (!validation.valid) {
       return reply.code(401).send({ error: 'Invalid token' });
     }

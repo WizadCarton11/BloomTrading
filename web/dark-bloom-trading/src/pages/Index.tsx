@@ -1,12 +1,19 @@
-import Navigation from "@/components/index/Navigation";
-import HeroSection from "@/components/index/HeroSection";
-import FeaturesSection from "@/components/index/FeaturesSection";
-import PlatformPreview from "@/components/index/PlatformPreview";
-import StatsSection from "@/components/index/StatsSection";
-import CTASection from "@/components/index/CTASection";
-import AiSection from "@/components/index/AiSection";
-import { useEffect } from "react";
-
+// import Navigation from "@/components/index/Navigation";
+// import HeroSection from "@/components/index/HeroSection";
+// import FeaturesSection from "@/components/index/FeaturesSection";
+// import PlatformPreview from "@/components/index/PlatformPreview";
+// import StatsSection from "@/components/index/StatsSection";
+// import CTASection from "@/components/index/CTASection";
+// import AiSection from "@/components/index/AiSection";
+import { Suspense, useEffect } from "react";
+import React from "react";
+const Navigation = React.lazy(() => import("@/components/index/Navigation"));
+const HeroSection = React.lazy(() => import("@/components/index/HeroSection"));
+const FeaturesSection = React.lazy(() => import("@/components/index/FeaturesSection"));
+const PlatformPreview = React.lazy(() => import("@/components/index/PlatformPreview"));
+const StatsSection = React.lazy(() => import("@/components/index/StatsSection"));
+const CTASection = React.lazy(() => import("@/components/index/CTASection"));
+const AiSection = React.lazy(() => import("@/components/index/AiSection"));
 const Index = () => {
   // Apply custom scrollbar styling when component mounts
   useEffect(() => {
@@ -42,14 +49,15 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Navigation />
-      <HeroSection />
-      <FeaturesSection />
-      <PlatformPreview />
-      <AiSection />
-      <StatsSection />
-      <CTASection />
-      
+      <Suspense fallback={<div className="flex items-center justify-center align-middle h-screen">Loading...</div>}>
+        <Navigation />
+        <HeroSection />
+        <FeaturesSection />
+        <PlatformPreview />
+        <AiSection />
+        <StatsSection />
+        <CTASection />
+      </Suspense>
       <footer className="py-8 px-4 border-t border-white/10">
         <div className="container mx-auto text-center text-muted-foreground">
           <p>&copy; 2024 DarkBloom Trading. All rights reserved.</p>

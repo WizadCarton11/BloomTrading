@@ -1,4 +1,4 @@
-
+import { useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { HeroSection } from "@/components/home/HeroSection";
 import { MarketSnapshot } from "@/components/home/MarketSnapshot";
@@ -9,6 +9,36 @@ import { NewsSection3 } from "@/components/home/NewsSection3";
 import { AppSidebar } from "@/components/home/AppSidebar";
 
 const Home = () => {
+  useEffect(() => {
+      // Add custom scrollbar styles
+      const style = document.createElement('style');
+      style.textContent = `
+        ::-webkit-scrollbar {
+          width: 10px;
+          background-color: #111827; /* dark background */
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background-color: #6366F1; /* indigo color, assuming your theme */
+          border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background-color: #4F46E5; /* darker on hover */
+        }
+        
+        /* For Firefox */
+        * {
+          scrollbar-width: thin;
+          scrollbar-color: #6366F1 #111827;
+        }
+      `;
+      document.head.appendChild(style);
+  
+      return () => {
+        document.head.removeChild(style);
+      };
+    }, []);
   return (
     <SidebarProvider>
     <div className="min-h-screen flex w-full bg-gray-950">
@@ -26,8 +56,6 @@ const Home = () => {
       <MarketSnapshot />
       <PortfolioOverview />
       <NewsSection />
-      <NewsSection2 />
-      <NewsSection3 />
     </div>
     </main>
     </div>

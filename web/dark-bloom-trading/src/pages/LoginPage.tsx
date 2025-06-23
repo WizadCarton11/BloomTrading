@@ -6,12 +6,70 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, Mail, Lock, User, ArrowLeft } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+
+import { useToast } from "@/components/ui/use-toast";
+import { useAxiosWrapper } from "@/context/AxiosWrapper";
 
 const LoginPage = () => {
   const [activeTab, setActiveTab] = useState("signin");
   const location = useLocation();
+  const {post, loading, error,get} = useAxiosWrapper(import.meta.env.VITE_API_AUTH_BACKEND_URL);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const [loginData, setLoginData] = useState({ email: '', password: '' });
+
+  const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLoginData(prev => ({ ...prev, [e.target.id]: e.target.value }));
+  };
+
+  const handleLogin = async () => {
+    try {
+      const response = await post('api/auth/login', {
+        email: loginData.email,
+        password: loginData.password,
+      });
+
+      const successToast=toast({
+        variant: "default",
+        title: "Login Successful",
+        description: "Redirecting to dashboard...",
+      });
+
+      // Save token to localStorage/cookie if needed here
+
+      setTimeout(() => {
+        navigate("/home"); 
+        successToast.dismiss();
+      }, 1000);
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: err.message || "Invalid email or password",
+      });
+    }
+  };
+  const tokenValidation = async () => {
+    try {
+      const response = await get('api/auth/me', {});
+      console.log("Token validation response:", response.status);
+      if (error) {
+        throw new Error(error.message || "Token validation failed");
+      }
+      navigate("/home");
+    } catch (err) {
+      // Handle error, possibly redirect to login
+      console.error("Token validation failed:", err);
+      navigate("/login?tab=signin");
+    }
+  };
   
+  useEffect(() => {
+      // Check if user is already authenticated
+      tokenValidation();
+    }, []);
   useEffect(() => {
     // Check URL parameters for tab selection
     const searchParams = new URLSearchParams(location.search);
@@ -20,7 +78,17 @@ const LoginPage = () => {
       setActiveTab("signup");
     }
   }, [location]);
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="loader">
+          <div className="spinner"></div>
+          <p className="text-muted-foreground">Checking your last session...</p>
 
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden">
       {/* Moving Background */}
@@ -117,7 +185,9 @@ const LoginPage = () => {
                       id="email" 
                       placeholder="name@example.com" 
                       type="email" 
-                      className="pl-10" 
+                      className="pl-10"
+                      value={loginData.email}
+                      onChange={handleLoginChange}
                     />
                   </div>
                 </div>
@@ -133,64 +203,23 @@ const LoginPage = () => {
                     <Input 
                       id="password" 
                       type="password" 
-                      className="pl-10" 
+                      className="pl-10"
+                      value={loginData.password}
+                      onChange={handleLoginChange}
                     />
                   </div>
                 </div>
-                <Button className="w-full bg-electric-600 hover:bg-electric-700 glow-effect">
+                <Button 
+                  className="w-full bg-electric-600 hover:bg-electric-700 glow-effect"
+                  onClick={handleLogin}
+                >
                   Sign In
                 </Button>
               </TabsContent>
+
               
               <TabsContent value="signup" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      id="name" 
-                      placeholder="John Doe" 
-                      className="pl-10" 
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      id="signup-email" 
-                      placeholder="name@example.com" 
-                      type="email" 
-                      className="pl-10" 
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      id="signup-password" 
-                      type="password" 
-                      className="pl-10" 
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      id="confirm-password" 
-                      type="password" 
-                      className="pl-10" 
-                    />
-                  </div>
-                </div>
-                <Button className="w-full bg-electric-600 hover:bg-electric-700 glow-effect">
-                  Create Account
-                </Button>
+                <SignUpForm setActiveTab={setActiveTab} />
               </TabsContent>
             </Tabs>
             
@@ -209,6 +238,116 @@ const LoginPage = () => {
         </Card>
       </motion.div>
     </div>
+  );
+};
+
+const SignUpForm = ({setActiveTab}) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const authUrl = import.meta.env.VITE_API_AUTH_BACKEND_URL
+  const { loading, error, post} = useAxiosWrapper(authUrl)
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    console.log(authUrl)
+    e.preventDefault();
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Passwords do not match.",
+      });
+      return;
+    }
+    try {
+      const response = await post('api/auth/register', {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+      });
+      
+        toast({
+          variant: "default",
+          title: "Success",
+          description: "Account created successfully. Please log in.",
+        })
+        setTimeout(() => {
+          setActiveTab("signin");
+        }, 1000);
+        
+      
+    } catch (err: any) {
+      console.log(err)
+      if (err.message) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: err.message || "An error occurred. Please try again.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "An unexpected error occurred. Please try again.",
+        });
+      }
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="firstName">First Name</Label>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input id="firstName" placeholder="John" className="pl-10" onChange={handleChange} required />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lastName">Last Name</Label>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input id="lastName" placeholder="Doe" className="pl-10" onChange={handleChange} required />
+          </div>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input id="email" placeholder="name@example.com" type="email" className="pl-10" onChange={handleChange} required />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="password">Password</Label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input id="password" type="password" className="pl-10" onChange={handleChange} required />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="confirmPassword">Confirm Password</Label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input id="confirmPassword" type="password" className="pl-10" onChange={handleChange} required />
+        </div>
+      </div>
+      <Button type="submit" className="w-full bg-electric-600 hover:bg-electric-700 glow-effect" >
+      Sign Up
+      </Button>
+    </form>
   );
 };
 

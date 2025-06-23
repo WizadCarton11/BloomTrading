@@ -18,6 +18,7 @@ export interface RefreshBody {
 
 export interface AuthenticatedRequest extends FastifyRequest {
   userId?: string;
+  accessToken?: string;
 }
 
 export interface UserResponse {

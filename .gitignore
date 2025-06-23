@@ -140,3 +140,4 @@ mlenv/
 !translation.json
 Data/data.json
 REDIS_gpt_guide.md
+.vscode/launch.json

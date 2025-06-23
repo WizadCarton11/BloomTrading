@@ -19,7 +19,7 @@ import { ChevronRight } from "lucide-react";
 const mainItems = [
   {
     title: "Home",
-    url: "/",
+    url: "/home",
     icon: Home,
   },
   {
@@ -63,7 +63,7 @@ export function AppSidebar() {
       <SidebarContent className="bg-gray-950">
         <SidebarGroup>
           <SidebarGroupLabel className="text-emerald-400 font-semibold text-lg mb-4">
-            TradePro
+            DarkBloom
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
