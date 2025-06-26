@@ -7,6 +7,8 @@ import { initI18n } from './i18';
 import { RateLimitOptions, RateLimitErrorContext } from './index.interface';
 import i18next from 'i18next';
 import * as grpcServer from './grpc-server';
+import { setupWebSocket } from './utils/websocket';
+import { createKafkaConsumer } from './utils/kafka.consumer';
 const redisClient = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
@@ -142,6 +144,9 @@ async function start(): Promise<void> {
     // Start HTTP server
     const port = parseInt(process.env.HTTP_PORT || '3003');
     await app.listen({ port, host: '0.0.0.0' });
+
+    const io=setupWebSocket(app);
+    await createKafkaConsumer(io);
     
     console.log(`Stock service HTTP server running on port ${port}`);
   } catch (error) {

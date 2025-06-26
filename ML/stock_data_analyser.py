@@ -15,8 +15,13 @@ import datetime
 from custom_exceptions import *
 import plotly.graph_objects as go
 from sqlalchemy import create_engine, text
+from datetime import timedelta
+from sqlalchemy import inspect
+from kafka import KafkaProducer
+import json
+import time
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(override=True)
 class StockDataAnalyser:
     """
     Class for analysing stock data
@@ -29,6 +34,11 @@ class StockDataAnalyser:
         self.processing_columns= ['open', 'high', 'low', 'close', 'volume']
         self.scraper = StockDataScraper(stockSymbol=self.stock_symbol)
         self.engine = create_engine(os.getenv('POSTGRES_URI'))
+        producer = KafkaProducer(
+            bootstrap_servers= os.getenv('KAFKA_URI'),
+            value_serializer=lambda v: json.dumps(v).encode('utf-8')
+        )
+
 
 
     def fetch_stock_data_and_store(self, mode: str='csv') -> pd.DataFrame:
@@ -43,6 +53,7 @@ class StockDataAnalyser:
                 df: pd.DataFrame=self.scraper.getStockData(compact=True)
             df.columns = [col.lower() for col in df.columns]
             df['index'] = df.index
+            df['used']=False
             self.logger.info(f"Fetched data from Alpha Vantage API.")
             self.logger.info(f"Fetching analysed data...")
             analysed_data: pd.DataFrame=self._get_analysed_data(df)
@@ -57,7 +68,7 @@ class StockDataAnalyser:
                     self.logger.info(f"Table exists in the database. Hence replacing the data.")
                     latest_data = self._sql_execute(query=f"SELECT * FROM {self.stock_symbol.lower()} ORDER BY index DESC LIMIT 1")
                     latest_data = latest_data.iloc[0]
-                    analysed_data = analysed_data[analysed_data['index'] >= latest_data['index']]
+                    analysed_data = analysed_data[analysed_data['index'] > latest_data['index']]
                     if analysed_data.empty:
                         self.logger.info(f"No new data to insert into the database.")
                         return None
@@ -73,6 +84,91 @@ class StockDataAnalyser:
         except Exception as e:
             raise_custom_exception(ScraperError, message=f"Error in StockDataAnalyser->fetch_stock_data_and_store: {e}")
             return None   
+
+    def generate_today_stock_data(self) -> pd.DataFrame:
+        """
+        Generate today's stock data using the waveform generation method.
+        """
+        try:
+            self.logger.info(f"Generating today's stock data for {self.stock_symbol}...")
+            latest_unused_data = self._sql_execute(query=f"SELECT * FROM {self.stock_symbol.lower()} WHERE used = False ORDER BY index DESC LIMIT 1")
+            if latest_unused_data.empty:
+                self.logger.info(f"No unused data found for {self.stock_symbol}. Fetching new data...")
+                self.fetch_stock_data_and_store(mode='db')
+                latest_unused_data = self._sql_execute(query=f"SELECT * FROM {self.stock_symbol.lower()} WHERE used = False ORDER BY index DESC LIMIT 1")
+                if latest_unused_data.empty:
+                    self.logger.info(f"No new data found for {self.stock_symbol}.")
+                    return None
+            latest_unused_data = latest_unused_data.iloc[0]
+            self.logger.info(f"Latest unused data: {latest_unused_data}")
+            waveform_length = 14400
+            y_vals=self._generate_waveform(
+                    length=waveform_length,
+                    rise_point=0.5,
+                    fall_point=0.7,
+                    max_amplitude=latest_unused_data['high'],
+                    min_amplitude=latest_unused_data['low'],
+                    final_value=latest_unused_data['close']
+                )
+            
+            fixed_date = pd.Timestamp("2025-06-24")
+
+            # Create a start datetime at midnight
+            start_datetime = pd.Timestamp(fixed_date.replace(hour=10, minute=0, second=0))
+
+            # Create evenly spaced times within the fixed date
+            time_range = pd.date_range(start=start_datetime, periods=waveform_length, end=start_datetime + timedelta(days=1) - timedelta(hours=6))
+
+            dataframe= pd.DataFrame({
+                'index': time_range,
+                'price': y_vals,
+                'stock_symbol': self.stock_symbol,
+            })
+            inspector = inspect(self.engine)
+
+            if 'today' not in inspector.get_table_names():
+                # Create table by inserting the schema (use replace or fail)
+                dataframe.head(0).to_sql('today', self.engine, if_exists='replace', index=False)
+
+            # Now safely append
+            # dataframe.to_sql('today', self.engine, if_exists='append', index=False)
+            dataframe.to_csv(f'./stock_data/{self.stock_symbol} .csv', index=False, mode='w')
+            self.logger.info(f"Today's stock data generated and stored in the database for {self.stock_symbol}.")
+            return dataframe
+        except Exception as e:
+            raise_custom_exception(ScraperError, message=f"Error in StockDataAnalyser->generate_today_stock_data: {e}")
+            return None
+    
+    def upload_stock_data_to_kafka(self):
+        """
+        Upload stock data to Kafka.
+        """
+        try:
+            self.logger.info(f"Uploading stock data for {self.stock_symbol} to Kafka...")
+            stock_data = self._sql_execute(f"SELECT * FROM today where stock_symbol = \'{self.stock_symbol}\' ORDER BY index ")
+            if stock_data.empty:
+                self.logger.info(f"No stock data found for {self.stock_symbol}.")
+                return None
+            producer = KafkaProducer(
+                bootstrap_servers=os.getenv('KAFKA_URI'),
+                value_serializer=lambda v: json.dumps(v).encode('utf-8')
+            )
+            
+            for _, row in stock_data.iterrows():
+                # print(row)
+                message = {
+                    'symbol': self.stock_symbol,
+                    'data': row['price'],
+                }
+                producer.send(self.stock_symbol.tolower(), value=message)
+                # print(f"Sent data for {self.stock_symbol} to Kafka: {message}")
+                self.logger.info(f"Sent data for {self.stock_symbol} to Kafka: {message}")
+                # sleep for 1 second to avoid overwhelming the Kafka broker
+                time.sleep(1)
+            producer.flush()
+            self.logger.info(f"Stock data for {self.stock_symbol} uploaded to Kafka successfully.")
+        except Exception as e:
+            raise_custom_exception(ScraperError, message=f"Error in StockDataAnalyser->upload_stock_data_to_kafka: {e}")
 
     def get_stock_data(self)-> pd.DataFrame:
         try:
@@ -142,3 +238,56 @@ class StockDataAnalyser:
             data[f'{col}_Bollinger_Lower'] = rolling_mean - (2 * rolling_std)
 
         return data
+    
+    def _generate_waveform(self, length=400, rise_point=0.3, fall_point=0.7, max_amplitude=1.0, min_amplitude=-1.0, final_value=0.5):
+        # Create normalized x-axis from 0 to 1
+        print("Generating waveform...")
+        x_axis = np.linspace(0, 1, length)
+        waveform = np.zeros_like(x_axis)
+
+        if rise_point < fall_point:
+            # Rising segment
+            rise_mask = x_axis <= rise_point
+            waveform[rise_mask] = max_amplitude * np.sin((np.pi * x_axis[rise_mask]) / (2 * rise_point))
+
+            # Falling segment
+            fall_mask = (x_axis > rise_point) & (x_axis <= fall_point)
+            waveform[fall_mask] = max_amplitude + (min_amplitude - max_amplitude) * \
+                (1 - np.cos(np.pi * (x_axis[fall_mask] - rise_point) / (fall_point - rise_point))) / 2
+
+            # Tail segment to final value
+            tail_mask = x_axis > fall_point
+            t = (x_axis[tail_mask] - fall_point) / (1 - fall_point)
+            start_tail_value = min_amplitude
+            waveform[tail_mask] = start_tail_value + (final_value - start_tail_value) * \
+                (1 - np.cos(np.pi * t)) / 2
+
+        else:
+            # Rising segment (if fall happens before rise)
+            rise_mask = x_axis <= fall_point
+            waveform[rise_mask] = min_amplitude * np.sin((np.pi * x_axis[rise_mask]) / (2 * fall_point))
+
+            # Falling segment
+            fall_mask = (x_axis > fall_point) & (x_axis <= rise_point)
+            waveform[fall_mask] = min_amplitude + (max_amplitude - min_amplitude) * \
+                (1 - np.cos(np.pi * (x_axis[fall_mask] - fall_point) / (rise_point - fall_point))) / 2
+
+            # Tail segment to final value
+            tail_mask = x_axis > rise_point
+            t = (x_axis[tail_mask] - rise_point) / (1 - rise_point)
+            start_tail_value = max_amplitude
+            waveform[tail_mask] = start_tail_value + (final_value - start_tail_value) * \
+                (1 - np.cos(np.pi * t)) / 2
+
+        # Optional: Add noise to simulate realism
+        for i in range(length):
+            if np.random.rand() < 0.7:
+                waveform[i] += np.random.normal(0, 0.9)
+            if waveform[i] >= max_amplitude:
+                waveform[i] = max_amplitude - np.random.normal(0.1, 0.5)
+            elif waveform[i] <= min_amplitude:
+                waveform[i] = min_amplitude + np.random.normal(0.1, 0.5)
+
+        waveform = np.nan_to_num(waveform)
+
+        return waveform

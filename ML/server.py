@@ -10,6 +10,14 @@ import time
 from lru_cache import LRUCache
 from stock_data_analyser import StockDataAnalyser
 import pandas as pd
+from contextlib import asynccontextmanager
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+from threading import Thread, Event
+from utils import simulate_stock_streaming
+
+running_flag = Event()
+worker_thread = None
 app = FastAPI(title="Stock Price Prediction API")
 
 # Add CORS middleware
@@ -89,7 +97,39 @@ class TrainingInput(BaseModel):
 #     except Exception as e:
 #         raise HTTPException(status_code=500, detail=str(e))
 
+scheduler= BackgroundScheduler()
 
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     scheduler.add_job(cron_job(), CronTrigger(hour=6, minute=30), id="daily_task", replace_existing=True)
+#     scheduler.start()
+    
+    
+#     yield  # ← App runs here
+
+#     # Shutdown logic
+#     scheduler.shutdown()
+    
+def cron_job():
+    try:
+        simulate_stock_streaming(flag= running_flag)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/start")
+def start_stream():
+    global worker_thread
+    if not running_flag.is_set():
+        running_flag.set()
+        worker_thread = Thread(target=cron_job, daemon=True)
+        worker_thread.start()
+        return {"status": "streaming started"}
+    return {"status": "already running"}
+
+@app.post("/stop")
+def stop_stream():
+    running_flag.clear()
+    return {"status": "streaming stopped"}
 
 @app.get('/fetch_stock_data/{stock_symbol}')
 async def get_stock_data(stock_symbol: str):
@@ -102,6 +142,32 @@ async def get_stock_data(stock_symbol: str):
         return {
             "message": f"Stock data for {stock_symbol} fetched and stored successfully.",
             "stock_symbol": stock_symbol,
+            }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get('/to_kafka/{stock_symbol}')
+async def to_kafka(stock_symbol: str):
+    try:
+        sda=StockDataAnalyser(stock_symbol=stock_symbol)
+        sda.upload_stock_data_to_kafka()
+        return {
+            "message": f"Stock data for {stock_symbol} sent to Kafka successfully.",
+            "stock_symbol": stock_symbol,
+            }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get('/process_today_stock_data/{stock_symbol}')
+async def process_today_stock_data(stock_symbol: str):
+    try:
+        sda=StockDataAnalyser(stock_symbol=stock_symbol)
+        data=sda.generate_today_stock_data()
+        return {
+            "message": f"Stock data for {stock_symbol} processed successfully.",
+            "stock_symbol": stock_symbol,
+            # "data": data.to_dict()
             }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

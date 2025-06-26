@@ -4,5 +4,9 @@
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
-    "peacock.color": "#42b883"
+    "peacock.color": "#42b883",
+    "files.watcherExclude": {
+        "**/mlenv/**": true,
+        "**/node_modules/**": true
+    }
 }
