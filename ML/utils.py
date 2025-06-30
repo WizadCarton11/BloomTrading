@@ -50,6 +50,7 @@ def simulate_stock_streaming(flag):
                     topic = f"{symbol.split('_today')[0].upper()}"
                     message = {"symbol": symbol, "data": row}
                     producer.send("live_stock_data", value=message, key=symbol.encode('utf-8'))
+                    # print(f"📤 [{symbol}] Sent to {topic}: {row}")
                     time.sleep(0.2)
                     # print(f"📤 [{symbol}] Sent to {topic}: {row}")
                 except StopIteration:

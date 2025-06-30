@@ -234,6 +234,7 @@ interface UseAxiosWrapperReturn {
 }
 
 // React Hook for easy integration
+let apiRef: React.MutableRefObject<AxiosWrapper | null> = null;
 export const useAxiosWrapper = (
   baseURL: string, 
   options: AxiosWrapperOptions = {}
@@ -241,11 +242,11 @@ export const useAxiosWrapper = (
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<ApiError | null>(null);
-  const apiRef = useRef<AxiosWrapper | null>(null);
-
+  apiRef = useRef<AxiosWrapper | null>(null);
+  
   useEffect(() => {
     // Initialize API wrapper
-    apiRef.current = new AxiosWrapper(baseURL, options);
+    if (!apiRef.current && apiRef) apiRef.current = new AxiosWrapper();
     
     // Set token update callback
     apiRef.current.setTokenUpdateCallback((token: string | null) => {
@@ -296,112 +297,16 @@ export const useAxiosWrapper = (
     
     // HTTP methods
     get: <T = any>(url: string, config?: AxiosRequestConfig) => 
-      makeRequest<T>('get', url, config),
+      makeRequest<T>('get', baseURL+url, config),
     post: <T = any>(url: string, data?: any, config?: AxiosRequestConfig) => 
-      makeRequest<T>('post', url, data, config),
+      makeRequest<T>('post',  baseURL+url, data, config),
     put: <T = any>(url: string, data?: any, config?: AxiosRequestConfig) => 
-      makeRequest<T>('put', url, data, config),
+      makeRequest<T>('put', baseURL+url, data, config),
     patch: <T = any>(url: string, data?: any, config?: AxiosRequestConfig) => 
-      makeRequest<T>('patch', url, data, config),
+      makeRequest<T>('patch', baseURL+url, data, config),
     delete: <T = any>(url: string, config?: AxiosRequestConfig) => 
-      makeRequest<T>('delete', url, config),
+      makeRequest<T>('delete', baseURL+url, config),
   };
 };
 
 // Types for common API responses
-export interface LoginRequest {
-  username: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  accessToken: string;
-  user: {
-    id: string;
-    username: string;
-    email: string;
-  };
-}
-
-export interface UserProfile {
-  id: string;
-  username: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  avatar?: string;
-}
-
-// Usage example component
-export const ExampleUsage: React.FC = () => {
-  const { 
-    api, 
-    accessToken, 
-    setAccessToken, 
-    loading, 
-    error, 
-    get, 
-    post 
-  } = useAxiosWrapper('https://api.example.com');
-
-  const handleLogin = async (): Promise<void> => {
-    try {
-      const loginData: LoginRequest = {
-        username: 'user@example.com',
-        password: 'password123'
-      };
-
-      const response = await post<LoginResponse>('/auth/login', loginData);
-      
-      console.log('Login successful:', response);
-      // Token will be automatically extracted and set in state
-    } catch (err) {
-      console.error('Login failed:', err);
-    }
-  };
-
-  const fetchUserData = async (): Promise<void> => {
-    try {
-      const userData = await get<UserProfile>('/user/profile');
-      console.log('User data:', userData);
-    } catch (err) {
-      console.error('Failed to fetch user data:', err);
-    }
-  };
-
-  const handleLogout = (): void => {
-    setAccessToken(null);
-  };
-
-  return (
-    <div>
-      <h2>API Example</h2>
-      
-      <div>
-        <strong>Access Token:</strong> {accessToken || 'Not set'}
-      </div>
-      
-      <div>
-        <strong>Loading:</strong> {loading ? 'Yes' : 'No'}
-      </div>
-      
-      {error && (
-        <div style={{ color: 'red' }}>
-          <strong>Error:</strong> {error.message}
-        </div>
-      )}
-      
-      <div>
-        <button onClick={handleLogin} disabled={loading}>
-          Login
-        </button>
-        <button onClick={fetchUserData} disabled={loading || !accessToken}>
-          Fetch User Data
-        </button>
-        <button onClick={handleLogout}>
-          Logout
-        </button>
-      </div>
-    </div>
-  );
-};

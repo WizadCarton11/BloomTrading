@@ -68,7 +68,7 @@ async function authRoutes(fastify: FastifyInstance): Promise<void> {
       reply.setCookie("refreshToken", result['refreshToken'], {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production', // Set to true in production
-        sameSite: 'strict', // Adjust as needed
+        sameSite: 'none', // Adjust as needed
         maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
       });
       reply.send({
@@ -124,7 +124,7 @@ async function authRoutes(fastify: FastifyInstance): Promise<void> {
   // Get current user
   fastify.get('/me', {
     preHandler: authenticateToken
-  }, async (request: AuthenticatedRequest, reply: FastifyReply) => {
+  }, async (request: AuthenticatedRequest , reply: FastifyReply) => {
     try {
       if (!request.userId) {
         return reply.code(401).send({ error: 'User ID not found' });
@@ -141,6 +141,12 @@ async function authRoutes(fastify: FastifyInstance): Promise<void> {
       };
       const lang= request.headers['x-lang'] || 'en';
       const t = i18next.getFixedT(lang);
+      reply.setCookie("refreshToken", request.refreshToken || '', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production', // Set to true in production
+        sameSite: 'lax', // Adjust as needed
+        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+      });
       reply.send({
         message: t('user.get.success'),
         data: userResponse,

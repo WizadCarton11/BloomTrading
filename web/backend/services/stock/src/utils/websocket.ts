@@ -12,6 +12,7 @@ export const setupWebSocket = (fastify: FastifyInstance): Server => {
     socket.on('subscribe', (symbol: string) => {
       socket.join(symbol);
       console.log(`📥 ${socket.id} subscribed to ${symbol}`);
+      console.log(`🧪 Rooms for ${socket.id}:`, [...socket.rooms]);
     });
 
     socket.on('unsubscribe', (symbol: string) => {

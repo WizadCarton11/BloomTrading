@@ -91,16 +91,18 @@ class StockDataAnalyser:
         """
         try:
             self.logger.info(f"Generating today's stock data for {self.stock_symbol}...")
-            latest_unused_data = self._sql_execute(query=f"SELECT * FROM {self.stock_symbol.lower()} WHERE used = False ORDER BY index DESC LIMIT 1")
+            latest_unused_data = self._sql_execute(query=f"SELECT * FROM {self.stock_symbol.lower()} WHERE used = False ORDER BY index DESC LIMIT 2")
             if latest_unused_data.empty:
                 self.logger.info(f"No unused data found for {self.stock_symbol}. Fetching new data...")
                 self.fetch_stock_data_and_store(mode='db')
-                latest_unused_data = self._sql_execute(query=f"SELECT * FROM {self.stock_symbol.lower()} WHERE used = False ORDER BY index DESC LIMIT 1")
+                latest_unused_data = self._sql_execute(query=f"SELECT * FROM {self.stock_symbol.lower()} WHERE used = False ORDER BY index DESC LIMIT 2")
                 if latest_unused_data.empty:
                     self.logger.info(f"No new data found for {self.stock_symbol}.")
                     return None
-            latest_unused_data = latest_unused_data.iloc[0]
-            self.logger.info(f"Latest unused data: {latest_unused_data}")
+            next_day_volume = latest_unused_data['volume'].iloc[0] 
+            
+            latest_unused_data = latest_unused_data.iloc[1]
+            # self.logger.info(f"Latest unused data: {latest_unused_data['index']}")
             waveform_length = 14400
             y_vals=self._generate_waveform(
                     length=waveform_length,
@@ -117,13 +119,16 @@ class StockDataAnalyser:
             start_datetime = pd.Timestamp(fixed_date.replace(hour=10, minute=0, second=0))
 
             # Create evenly spaced times within the fixed date
-            time_range = pd.date_range(start=start_datetime, periods=waveform_length, end=start_datetime + timedelta(days=1) - timedelta(hours=6))
-
+            # time_range = pd.date_range(start=start_datetime, periods=waveform_length, end=start_datetime + timedelta(days=1) - timedelta(hours=6))
+            volume_array = np.round( np.linspace(latest_unused_data['volume'], next_day_volume, waveform_length) + np.random.normal(0, 1, waveform_length)).astype(int)
             dataframe= pd.DataFrame({
-                'index': time_range,
                 'price': y_vals,
                 'stock_symbol': self.stock_symbol,
+                
             })
+            dataframe['volume'] = volume_array
+            dataframe['change'] = dataframe['price'].diff().fillna(0)
+            dataframe['changePercent'] = (dataframe['change'] / dataframe['price'].shift(1)).fillna(0) * 100
             inspector = inspect(self.engine)
 
             if 'today' not in inspector.get_table_names():
@@ -136,6 +141,7 @@ class StockDataAnalyser:
             self.logger.info(f"Today's stock data generated and stored in the database for {self.stock_symbol}.")
             return dataframe
         except Exception as e:
+            print(e)
             raise_custom_exception(ScraperError, message=f"Error in StockDataAnalyser->generate_today_stock_data: {e}")
             return None
     
@@ -175,6 +181,25 @@ class StockDataAnalyser:
             return self._sql_execute(query=f"Select * from {self.stock_symbol.lower()}")
         except Exception as e:
             raise_custom_exception(DatabaseError, message=f"Error in StockDataAnalyser->get_stock_data: {e}")
+        
+    def get_stock_company_info(self) -> dict:
+        """
+        Get stock company information.
+        """
+        try:
+            info = self.scraper.getStockInfo()
+            if not info:
+                raise_custom_exception(ScraperError, message=f"Failed to fetch stock info for {self.stock_symbol}.")
+            df= pd.DataFrame.from_dict(info, orient='index').T
+            df.columns = [col.lower() for col in df.columns]
+            info = df.to_dict(orient='records')[0]
+            info['symbol'] = self.stock_symbol
+            self.logger.info(f"Fetched stock company info for {self.stock_symbol}.")
+            df.to_sql('stock_info', self.engine, if_exists='append', index=False)
+            return info
+        except Exception as e:
+            raise_custom_exception(ScraperError, message=f"Error in StockDataAnalyser->get_stock_company_info: {e}")
+            return None
 
     def _check_if_table_exists(self, table_name: str) -> bool:
         """

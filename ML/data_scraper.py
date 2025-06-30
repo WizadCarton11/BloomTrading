@@ -75,7 +75,7 @@ class StockDataScraper:
         
     def getStockInfo(self):
         try:
-            return self.yahoo_finance_info()
+            return self.alpha_vantage_info()
         except Exception as e:
             raise CustomException(f"Failed to fetch stock info for {self.stock_symbol}: {e}")
         

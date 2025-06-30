@@ -24,7 +24,7 @@ const mainItems = [
   },
   {
     title: "Market",
-    url: "/market",
+    url: "/marketplace",
     icon: TrendingUp,
   },
   {

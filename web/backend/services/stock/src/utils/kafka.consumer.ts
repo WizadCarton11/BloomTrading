@@ -16,22 +16,19 @@ export const createKafkaConsumer = async (io: SocketIOServer) => {
 
   await consumer.connect();
   await consumer.subscribe({ topic: 'live_stock_data', fromBeginning: false });
-  let i=0
+  
   await consumer.run({
     eachMessage: async ({ message }) => {
       try {
+        // console.log('📥 Received message:', message);
           const value = message.value?.toString();
           if (!value) return;
           
           const parsed: StockMessage = JSON.parse(value);
-          const { symbol, data } = parsed;
-            //   if (i%10 === 0) {
-            //     console.log(`📈 Processing stock update for ${symbol}:`, data);
-            //   };
-        // console.log(`📈 Received stock update for ${symbol}:`, data);
-        // Push to WebSocket room for the symbol
-        io.to(symbol).emit('stock-update', { symbol, data });
-        i++;
+          const { symbol , data } = parsed;
+          // console.log(`📈 Processing stock update for ${symbol}`);
+          // console.log(typeof symbol, symbol);
+        io.to(symbol.trim()).emit('stock-update', { symbol, data });
         
       } catch (err) {
         console.error('❌ Failed to process message:', err);

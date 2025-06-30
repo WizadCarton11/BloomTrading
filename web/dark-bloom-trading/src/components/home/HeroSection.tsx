@@ -28,7 +28,7 @@ export function HeroSection() {
   }, []);
 
   return (
-    <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-emerald-900 py-20 px-6">
+    <section className="relative bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-950 py-20 px-6">
       <div className="max-w-7xl mx-auto text-center">
         <div className="mb-8">
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">

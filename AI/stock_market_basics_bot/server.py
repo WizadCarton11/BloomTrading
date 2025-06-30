@@ -34,6 +34,7 @@ class QueryRequest(BaseModel):
 cache_manager= RedisCacheManager(redis_host, redis_port, redis_db, cache_ttl)
 @app.post("/query")
 async def query_mongo(request: QueryRequest):
+    
     qa_system = MongoDBAtlasQA(MONGO_URI, DB_NAME, COLLECTION_NAME, embedding, INDEX_NAME, llm,
                                 conversation_id=request.conversation_id, history_limit=10, 
                                 user_id=request.user_id, cache_manager=cache_manager)
@@ -41,4 +42,4 @@ async def query_mongo(request: QueryRequest):
     return {"response": response}
 
 if __name__ == "__main__":
-    uvicorn.run("server:app", host="0.0.0.0", port=6080, reload=True)
+    uvicorn.run("server:app", host="0.0.0.0", port=6081, reload=True)

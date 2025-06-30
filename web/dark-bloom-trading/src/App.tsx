@@ -14,6 +14,7 @@ const Index= React.lazy(() => import("./pages/Index"));
 const LoginPage = React.lazy(() => import("./pages/LoginPage"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 const Home = React.lazy(() => import("./pages/Home"));
+const MarketPlace= React.lazy(() => import("./pages/StockMarketplace"));
 const App = () => (
   
     <TooltipProvider>
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/home" element={<Home/>}/>
+          <Route path="/marketplace" element={<MarketPlace />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

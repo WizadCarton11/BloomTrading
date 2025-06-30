@@ -184,6 +184,31 @@ async def get_analysis(stock_symbol: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get('/get_stock_info/{stock_symbol}')
+async def get_stock_info(stock_symbol: str):
+    try:
+        sda=StockDataAnalyser(stock_symbol=stock_symbol)
+        info=sda.get_stock_company_info()
+        return {
+            "stock_symbol": stock_symbol,
+            "stock_info": info
+            }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get('/add_stock_data/{stock_symbol}')
+async def add_stock_data(stock_symbol: str):
+    try:
+        sda=StockDataAnalyser(stock_symbol=stock_symbol)
+        sda.fetch_stock_data_and_store(mode='db')
+        sda.generate_today_stock_data()
+        sda.get_stock_company_info()
+        return {
+            "message": f"Stock data for {stock_symbol} added successfully.",
+            "stock_symbol": stock_symbol,
+            }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 start_time = time.time()
 @app.get("/health")

@@ -9,6 +9,7 @@ import i18next from 'i18next';
 import * as grpcServer from './grpc-server';
 import { setupWebSocket } from './utils/websocket';
 import { createKafkaConsumer } from './utils/kafka.consumer';
+import '@fastify/cookie';
 const redisClient = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
@@ -35,6 +36,13 @@ const app = fastify({
         }
       }
 });
+
+app.register(require('@fastify/cookie'), {
+  secret: "my-secret", // for cookies signature
+  hook: 'onRequest', // set to false to disable cookie autoparsing or set autoparsing on any of the following hooks: 'onRequest', 'preParsing', 'preHandler', 'preValidation'. default: 'onRequest'
+  parseOptions: {}  // options for parsing cookies
+})
+
 app.addHook('preHandler', async (request, reply) => {
   const lang = request.headers['accept-language']?.split(',')[0] || 'en';
   request.headers['x-lang'] = lang; // Optional: attach to header for reuse
@@ -113,11 +121,43 @@ app.setErrorHandler((error, request, reply) => {
   });
 });
 
+
 // Load plugins
+// async function loadPlugins(): Promise<void> {
+//   await app.register(require('@fastify/cors'), {
+//     origin: true
+//   });
+  
+//   await app.register(require('@fastify/helmet'));
+// }
+
 async function loadPlugins(): Promise<void> {
+  interface CorsOriginCallback {
+    (error: Error | null, allow: boolean): void;
+  }
+
+  interface CorsOptions {
+    origin: (origin: string | undefined, cb: CorsOriginCallback) => void;
+    credentials: boolean;
+  }
+
   await app.register(require('@fastify/cors'), {
-    origin: true
-  });
+    origin: (origin: string | undefined, cb: CorsOriginCallback) => {
+      const allowedOrigins: string[] = ['http://localhost:3000', 'https://yourfrontend.com'];
+      if (!origin || allowedOrigins.includes(origin)) {
+        cb(null, true);
+      } else {
+        console.warn(`CORS request from disallowed origin: ${origin}`);
+        cb(new Error("Not allowed by CORS"), false);
+      }
+    },
+    credentials: true
+  } as CorsOptions);
+
+  // await app.register(require('@fastify/cors'), {
+  //   origin: '*',
+  //   credentials: true,
+  // });
   
   await app.register(require('@fastify/helmet'));
 }

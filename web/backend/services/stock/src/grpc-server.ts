@@ -1,7 +1,7 @@
 import * as grpc from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
 import * as path from 'path';
-import * as AccountService from './services/account-service';
+import * as AccountService from './services/stock.service';
 
 const PROTO_PATH = path.join(__dirname, '../proto/stock.proto');
 
