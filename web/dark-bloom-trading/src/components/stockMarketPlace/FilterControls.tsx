@@ -12,6 +12,7 @@ interface FilterControlsProps {
   sortOrder: 'asc' | 'desc';
   onSortOrderChange: (order: 'asc' | 'desc') => void;
   onClearFilters: () => void;
+  sectors: string[];
 }
 
 export function FilterControls({ 
@@ -21,19 +22,20 @@ export function FilterControls({
   onSortChange,
   sortOrder,
   onSortOrderChange,
-  onClearFilters
+  onClearFilters,
+  sectors 
 }: FilterControlsProps) {
-  const sectors = [
-    "All Sectors",
-    "Technology", 
-    "Healthcare", 
-    "Finance", 
-    "Energy", 
-    "Consumer", 
-    "Industrial", 
-    "Real Estate",
-    "Utilities"
-  ];
+  // const sectors = [
+  //   "All Sectors",
+  //   "Technology", 
+  //   "Healthcare", 
+  //   "Finance", 
+  //   "Energy", 
+  //   "Consumer", 
+  //   "Industrial", 
+  //   "Real Estate",
+  //   "Utilities"
+  // ];
 
   const sortOptions = [
     { value: "symbol", label: "Symbol" },

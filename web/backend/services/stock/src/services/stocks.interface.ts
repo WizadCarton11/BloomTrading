@@ -10,4 +10,5 @@ export interface StocksResponseInterface {
   stocks: any,
   allStocksList: any,
   totalCount: any,
+  sectors?: string[],
 }

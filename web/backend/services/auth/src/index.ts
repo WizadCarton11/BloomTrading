@@ -10,6 +10,7 @@ import { RateLimitOptions, RateLimitErrorContext } from './index.interface';
 import i18next from 'i18next';
 import { initI18n } from './i18';
 import '@fastify/cookie';
+import path from 'path';
 
 const redisClient = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
@@ -34,11 +35,29 @@ const app = fastify({
   }
 });
 
+// Register
 app.register(require('@fastify/cookie'), {
-  secret: "my-secret", // for cookies signature
-  hook: 'onRequest', // set to false to disable cookie autoparsing or set autoparsing on any of the following hooks: 'onRequest', 'preParsing', 'preHandler', 'preValidation'. default: 'onRequest'
-  parseOptions: {}  // options for parsing cookies
-})
+  secret: process.env.COOKIE_SECRET || 'default-secret', // ⬅️ Required
+  hook: 'onRequest',
+  parseOptions: {
+    path: '/',
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'lax',
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+    signed: true, // ⬅️ Required
+  },
+});
+
+app.addHook('onRequest', async (request, _reply) => {
+  const raw = request.cookies['refreshToken'];
+  if (raw) {
+    const { value, valid } = request.unsignCookie(raw);
+    if (valid) {
+      request.cookies['refreshToken'] = value;
+    }
+  }
+});
 
 async function loadPlugins(): Promise<void> {
   interface CorsOriginCallback {

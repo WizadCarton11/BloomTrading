@@ -38,6 +38,9 @@ export function MarketSnapshot() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="transition-transform duration-500 group-hover:translate-z-2">
+                {
+                  data?
+                <>
                 <div className="space-y-2">
                   <div className="text-2xl font-bold text-white group-hover:text-emerald-100 transition-colors">
                     ${data?.price ?? '0.00'}
@@ -59,6 +62,12 @@ export function MarketSnapshot() {
                     Volume: {data?.volume ?? '—'}
                   </div>
                 </div>
+                </>
+                :
+                <div className="text-gray-500 text-center py-6">
+                  Loading data for {symbol}...
+                </div>
+                }
               </CardContent>
             </Card>
           ))}

@@ -39,7 +39,7 @@ export function validateBody<T>(schema: ZodSchema<T>) {
 export async function authenticateToken(request: FastifyRequest & Partial<AuthenticatedRequest>, reply: FastifyReply) {
   try {
 
-    // const authHeader = request.headers.authorization;
+    
     const authAccessToken = request.cookies['accessToken'] || request.headers.authorization;
     const authRefreshToken = request.cookies['refreshToken'] || request.headers['x-refresh-token'];
     if (!authAccessToken) {

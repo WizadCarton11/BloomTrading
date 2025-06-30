@@ -72,19 +72,19 @@ async function stockRoutes(fastify: FastifyInstance): Promise<void> {
       const t = i18next.getFixedT(lang);
       const { limit, offset } = request.query as { limit: number, offset: number };
       const cacheKey = `stocksList:${limit}:${offset}`;
-      // const result= await cacheWithRevalidation({
-      //   key:cacheKey,
-      //   ttl: 10000,
-      //   fetchFn: async () => {
-      //     return StockService.getStocks(limit, offset);
-      //   }
-      //   }
-      // )
-      // const stocks = await StockService.getStocks(limit, offset);
-      const data= await StockService.getStocks(limit, offset);
+      const result= await cacheWithRevalidation({
+        key:cacheKey,
+        ttl: 10000,
+        fetchFn: async () => {
+          return StockService.getStocks(limit, offset);
+        }
+        }
+      )
+      const stocks = await StockService.getStocks(limit, offset);
+      // const data= await StockService.getStocks(limit, offset);
       return reply.send({ message: t('stock.get.success'),
-         data: data, accessToken: request.accessToken,
-        fromCache: "result.fromCache"
+         data: result.data, accessToken: request.accessToken,
+        fromCache: result.fromCache
         });
     } catch (error: any) {
       console.error(error);

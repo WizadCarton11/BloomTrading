@@ -7,14 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, Mail, Lock, User, ArrowLeft } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-
+import { AuthService } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import { useAxiosWrapper } from "@/context/AxiosWrapper";
+import { set } from "date-fns";
 
 const LoginPage = () => {
   const [activeTab, setActiveTab] = useState("signin");
   const location = useLocation();
-  const {post, loading, error,get} = useAxiosWrapper(import.meta.env.VITE_API_AUTH_BACKEND_URL);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -26,10 +27,14 @@ const LoginPage = () => {
 
   const handleLogin = async () => {
     try {
-      const response = await post('api/auth/login', {
+      
+      const response = await AuthService.post('api/auth/login', {
         email: loginData.email,
         password: loginData.password,
-      });
+      },
+      {},
+      'loginKey'
+    );
 
       const successToast=toast({
         variant: "default",
@@ -53,13 +58,11 @@ const LoginPage = () => {
   };
   const tokenValidation = async () => {
     try {
-      const response = await get('api/auth/me', {});
+      const response = await AuthService.get('api/auth/me', {}, 'getUserKey');
       console.log("Token validation response:", response.status);
-      if (error) {
-        throw new Error(error.message || "Token validation failed");
-      }
       navigate("/home");
     } catch (err) {
+      // setLoading(false);
       // Handle error, possibly redirect to login
       console.error("Token validation failed:", err);
       navigate("/login?tab=signin");
@@ -78,7 +81,7 @@ const LoginPage = () => {
       setActiveTab("signup");
     }
   }, [location]);
-  if (loading) {
+  if (AuthService.isLoading('getUserKey')) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="loader">

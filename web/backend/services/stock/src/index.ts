@@ -38,10 +38,28 @@ const app = fastify({
 });
 
 app.register(require('@fastify/cookie'), {
-  secret: "my-secret", // for cookies signature
-  hook: 'onRequest', // set to false to disable cookie autoparsing or set autoparsing on any of the following hooks: 'onRequest', 'preParsing', 'preHandler', 'preValidation'. default: 'onRequest'
-  parseOptions: {}  // options for parsing cookies
-})
+  secret: process.env.COOKIE_SECRET || 'default-secret', // ⬅️ Required
+  hook: 'onRequest',
+  parseOptions: {
+    path: '/',
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'lax',
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+    signed: true, // ⬅️ Required
+  },
+});
+
+app.addHook('onRequest', async (request, _reply) => {
+  const raw = request.cookies['refreshToken'];
+  if (raw) {
+    const { value, valid } = request.unsignCookie(raw);
+    if (valid) {
+      request.cookies['refreshToken'] = value;
+    }
+  }
+});
+
 
 app.addHook('preHandler', async (request, reply) => {
   const lang = request.headers['accept-language']?.split(',')[0] || 'en';
