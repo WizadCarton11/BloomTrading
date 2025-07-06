@@ -1,5 +1,5 @@
 import Redis from 'ioredis';
-const redis = new Redis({
+export const redisClient = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
   password: process.env.REDIS_PASSWORD || undefined,
@@ -14,8 +14,10 @@ export interface CacheOptions<T> {
 
 export async function cacheWithRevalidation<T>(options: CacheOptions<T>): Promise<{ data: T; fromCache: boolean; staleFallback?: boolean }> {
   const { key, ttl = 300, fetchFn } = options;
+  const t0 = Date.now();
+  const cached = await redisClient.get(key);
+  console.log('Redis get time:', Date.now() - t0);
 
-  const cached = await redis.get(key);
   if (cached) {
     const parsed = JSON.parse(cached);
 
@@ -23,7 +25,7 @@ export async function cacheWithRevalidation<T>(options: CacheOptions<T>): Promis
     setImmediate(async () => {
       try {
         const fresh = await fetchFn();
-        await redis.set(key, JSON.stringify(fresh), 'EX', ttl);
+        await redisClient.set(key, JSON.stringify(fresh), 'EX', ttl);
       } catch (e) {
         console.error(`[CacheRevalidateError] Key=${key}`, e);
       }
@@ -37,7 +39,7 @@ export async function cacheWithRevalidation<T>(options: CacheOptions<T>): Promis
 
   // Cache miss
   const fresh = await fetchFn();
-  await redis.set(key, JSON.stringify(fresh), 'EX', ttl);
+  await redisClient.set(key, JSON.stringify(fresh), 'EX', ttl);
 
   return {
     data: fresh,

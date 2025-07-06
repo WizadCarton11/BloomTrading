@@ -66,7 +66,7 @@ export function CompareMode({
               <span className="text-sm text-muted-foreground">Select Sector:</span>
               <Select value={selectedSector} onValueChange={onSectorChange}>
                 <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Choose a sector" />
+                <SelectValue placeholder="No sector selected"  />
                 </SelectTrigger>
                 <SelectContent>
                   {sectors.map((sector) => (

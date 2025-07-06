@@ -39,10 +39,8 @@ export function FilterControls({
 
   const sortOptions = [
     { value: "symbol", label: "Symbol" },
-    { value: "price", label: "Price" },
-    { value: "change", label: "Change" },
-    { value: "volume", label: "Volume" },
-    { value: "marketCap", label: "Market Cap" }
+    { value: "marketCap", label: "Market Cap" },
+    { value: "name", label: "Industry"}
   ];
 
   const hasActiveFilters = selectedSector !== "All Sectors" || sortBy !== "symbol";

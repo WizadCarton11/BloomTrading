@@ -39,35 +39,37 @@ export function MarketSnapshot() {
               </CardHeader>
               <CardContent className="transition-transform duration-500 group-hover:translate-z-2">
                 {
-                  data?
-                <>
-                <div className="space-y-2">
-                  <div className="text-2xl font-bold text-white group-hover:text-emerald-100 transition-colors">
-                    ${data?.price ?? '0.00'}
-                  </div>
-                  <div className={`flex items-center gap-1 text-sm transition-all duration-300 ${
-                    data?.change >= 0 ? 'text-green-400 group-hover:text-green-300' : 'text-red-400 group-hover:text-red-300'
-                  }`}>
-                    {data?.change >= 0 ? (
-                      <TrendingUp className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
-                    )}
-                    <span>{data?.change >= 0 ? '+' : ''}{data?.change?.toFixed(2) ?? '0.00'}</span>
-                    <span>
-                      ({data?.changePercent >= 0 ? '+' : ''}{((data?.changePercent ?? 0) * 100)?.toFixed(2)}%)
-                    </span>
-                  </div>
-                  <div className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
-                    Volume: {data?.volume ?? '—'}
-                  </div>
-                </div>
-                </>
-                :
-                <div className="text-gray-500 text-center py-6">
-                  Loading data for {symbol}...
-                </div>
-                }
+  data ? (
+    <>
+      <div className="space-y-2">
+        <div className="text-2xl font-bold text-white group-hover:text-emerald-100 transition-colors">
+          ${data.price}
+        </div>
+        <div className={`flex items-center gap-1 text-sm transition-all duration-300 ${
+          data.change >= 0 ? 'text-green-400 group-hover:text-green-300' : 'text-red-400 group-hover:text-red-300'
+        }`}>
+          {data.change >= 0 ? (
+            <TrendingUp className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
+          ) : (
+            <TrendingDown className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
+          )}
+          <span>{data.change >= 0 ? '+' : ''}{data.change.toFixed(2)}</span>
+          <span>
+            ({data.changePercent >= 0 ? '+' : ''}{(data.changePercent * 100).toFixed(2)}%)
+          </span>
+        </div>
+        <div className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
+          Volume: {data.volume}
+        </div>
+      </div>
+    </>
+  ) : (
+    <div className="text-gray-500 text-center py-6">
+      Loading data for {symbol}...
+    </div>
+  )
+}
+
               </CardContent>
             </Card>
           ))}

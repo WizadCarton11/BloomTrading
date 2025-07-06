@@ -16,6 +16,7 @@ interface Stock {
   sector?: string;
   pe?: number;
   data?: any; // Optional field for additional data
+  visible?: boolean; 
 }
 
 interface StockCardProps {
@@ -28,20 +29,42 @@ interface StockCardProps {
 export function StockCard({ stock , isCompareMode = false, isSelected = false, onSelect }: StockCardProps) {
   const isPositive = stock.change >= 0;
   const {symbol, data }= useSingleStockSubscription(stock.symbol || "");
+  const navigation = useNavigate();
   const handleClick = () => {
     if (isCompareMode && onSelect) {
       console.log(`Selected stock: ${stock}`);
-      onSelect(stock.id);
+      onSelect(stock.symbol);
+    }
+    if (!isCompareMode) {
+      console.log(`Clicked on stock: ${stock.symbol}`);
+      navigation(`/stock/${stock.symbol}`, { state: { stock: stock } });
+      // Navigate to the stock details page or perform any other action
+      // For example, you can use a router to navigate to a stock details page
     }
   };
+  function formatMarketCap(value: number | bigint | undefined): string {
+    if (value === undefined || value === null) return "Loading...";
+
+    const cap = typeof value === 'bigint' ? value : BigInt(Math.round(value));
+
+    if (cap >= BigInt(1e12)) return (Number(cap) / 1e12).toFixed(2) + " T";
+    if (cap >= BigInt(1e9)) return (Number(cap) / 1e9).toFixed(2) + " B";
+    if (cap >= BigInt(1e6)) return (Number(cap) / 1e6).toFixed(2) + " M";
+
+    return cap.toString(); // Less than 1M: show full number
+  }
+
   
   return (
     <Card 
   className={`group relative overflow-hidden transition-all duration-300 ease-in-out 
     bg-gradient-to-br from-[#0f172a] to-[#1e293b] 
     border border-border hover:border-blue-500 
-    hover:scale-[1.03] hover:shadow-xl hover:shadow-blue-500/30
+    hover:scale-[1.03] hover:shadow-xl hover:shadow-blue-500/30 hover:shadow-lg
+    hover:shadow-blue-500/20 
+    cursor-pointer
     rounded-xl
+    ${stock.visible ? 'display-block' : 'hidden'}
     ${isCompareMode ? 'cursor-pointer' : ''}
     ${isSelected ? 'border-blue-500 bg-blue-500/10' : ''}
   `}
@@ -130,7 +153,7 @@ export function StockCard({ stock , isCompareMode = false, isSelected = false, o
       <div className="group-hover:translate-x-1 transition-transform duration-300">
         <p className="text-xs group-hover:text-gray-300">Market Cap</p>
         <p className="font-medium text-foreground group-hover:text-white">
-          {(stock?.marketCap ? Number(stock.marketCap) / 1000000000 : undefined)?.toFixed(2) + " B" || "Loading..."}
+          {formatMarketCap(stock.marketCap) || "Loading..."}
         </p>
       </div>
       {/* <div className="group-hover:translate-x-1 transition-transform duration-300">
@@ -153,10 +176,11 @@ export function StockCard({ stock , isCompareMode = false, isSelected = false, o
 }
 
 import { memo } from "react";
+import { Router, useNavigate } from "react-router-dom";
 
 const MemoizedStockCard = memo(StockCard, (prevProps, nextProps) => {
   return (
-    prevProps.stock.id === nextProps.stock.id &&
+    prevProps.stock.symbol === nextProps.stock.symbol &&
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.isCompareMode === nextProps.isCompareMode
   );

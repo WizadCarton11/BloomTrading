@@ -73,6 +73,8 @@ class StockDataAnalyser:
                         self.logger.info(f"No new data to insert into the database.")
                         return None
                     else:
+                        # make index the primary key
+                        analysed_data.set_index('index', inplace=True)
                         analysed_data.to_sql(self.stock_symbol.lower(), self.engine, if_exists='append', index=True)
                 else:
                     analysed_data.to_sql(self.stock_symbol.lower(), self.engine, if_exists='append', index=True)
@@ -103,28 +105,33 @@ class StockDataAnalyser:
             
             latest_unused_data = latest_unused_data.iloc[1]
             # self.logger.info(f"Latest unused data: {latest_unused_data['index']}")
-            waveform_length = 14400
+            waveform_length = 9500
+            rise_point = np.random.uniform(0.1, 0.5)
+            fall_point = np.random.uniform(0.5, 0.9)
+            if np.random.rand() < 0.5:
+                fall_point, rise_point = rise_point, fall_point
             y_vals=self._generate_waveform(
                     length=waveform_length,
-                    rise_point=0.5,
-                    fall_point=0.7,
+                    rise_point=rise_point,
+                    fall_point=fall_point,
                     max_amplitude=latest_unused_data['high'],
                     min_amplitude=latest_unused_data['low'],
-                    final_value=latest_unused_data['close']
+                    final_value=latest_unused_data['close'],
+                    start_value=latest_unused_data['open']
                 )
             
-            fixed_date = pd.Timestamp("2025-06-24")
+            fixed_date = pd.Timestamp(datetime.datetime.now().strftime("%Y-%m-%d"))
 
             # Create a start datetime at midnight
             start_datetime = pd.Timestamp(fixed_date.replace(hour=10, minute=0, second=0))
 
             # Create evenly spaced times within the fixed date
-            # time_range = pd.date_range(start=start_datetime, periods=waveform_length, end=start_datetime + timedelta(days=1) - timedelta(hours=6))
+            time_range = pd.date_range(start=start_datetime, periods=waveform_length, end=start_datetime + timedelta(days=1) - timedelta(hours=6))
             volume_array = np.round( np.linspace(latest_unused_data['volume'], next_day_volume, waveform_length) + np.random.normal(0, 1, waveform_length)).astype(int)
             dataframe= pd.DataFrame({
                 'price': y_vals,
                 'stock_symbol': self.stock_symbol,
-                
+                'timestamp': time_range
             })
             dataframe['volume'] = volume_array
             dataframe['change'] = dataframe['price'].diff().fillna(0)
@@ -264,55 +271,57 @@ class StockDataAnalyser:
 
         return data
     
-    def _generate_waveform(self, length=400, rise_point=0.3, fall_point=0.7, max_amplitude=1.0, min_amplitude=-1.0, final_value=0.5):
+    def _generate_waveform(self, length, fall_point=0.3, rise_point=0.7, max_amplitude=1.0, min_amplitude=-1.0, final_value=0.5, start_value=0.5):
         # Create normalized x-axis from 0 to 1
+        max_amplitude = start_value - max_amplitude
+        min_amplitude = start_value - min_amplitude
+        final_value = start_value - final_value
         print("Generating waveform...")
         x_axis = np.linspace(0, 1, length)
         waveform = np.zeros_like(x_axis)
 
-        if rise_point < fall_point:
-            # Rising segment
-            rise_mask = x_axis <= rise_point
-            waveform[rise_mask] = max_amplitude * np.sin((np.pi * x_axis[rise_mask]) / (2 * rise_point))
-
+        if fall_point < rise_point:
             # Falling segment
-            fall_mask = (x_axis > rise_point) & (x_axis <= fall_point)
-            waveform[fall_mask] = max_amplitude + (min_amplitude - max_amplitude) * \
-                (1 - np.cos(np.pi * (x_axis[fall_mask] - rise_point) / (fall_point - rise_point))) / 2
+            fall_mask = x_axis <= fall_point
+            waveform[fall_mask] = max_amplitude * np.sin((np.pi * x_axis[fall_mask]) / (2 * fall_point))
+
+            # Rising segment
+            rise_mask = (x_axis > fall_point) & (x_axis <= rise_point)
+            waveform[rise_mask] = max_amplitude + (min_amplitude - max_amplitude) * \
+                (1 - np.cos(np.pi * (x_axis[rise_mask] - fall_point) / (rise_point - fall_point))) / 2
 
             # Tail segment to final value
-            tail_mask = x_axis > fall_point
-            t = (x_axis[tail_mask] - fall_point) / (1 - fall_point)
+            tail_mask = x_axis > rise_point
+            t = (x_axis[tail_mask] - rise_point) / (1 - rise_point)
             start_tail_value = min_amplitude
             waveform[tail_mask] = start_tail_value + (final_value - start_tail_value) * \
                 (1 - np.cos(np.pi * t)) / 2
 
         else:
-            # Rising segment (if fall happens before rise)
-            rise_mask = x_axis <= fall_point
-            waveform[rise_mask] = min_amplitude * np.sin((np.pi * x_axis[rise_mask]) / (2 * fall_point))
+            # Rising segment
+            rise_mask = x_axis <= rise_point
+            waveform[rise_mask] = min_amplitude * np.sin((np.pi * x_axis[rise_mask]) / (2 * rise_point))
 
             # Falling segment
-            fall_mask = (x_axis > fall_point) & (x_axis <= rise_point)
+            fall_mask = (x_axis > rise_point) & (x_axis <= fall_point)
             waveform[fall_mask] = min_amplitude + (max_amplitude - min_amplitude) * \
-                (1 - np.cos(np.pi * (x_axis[fall_mask] - fall_point) / (rise_point - fall_point))) / 2
+                (1 - np.cos(np.pi * (x_axis[fall_mask] - rise_point) / (fall_point - rise_point))) / 2
 
             # Tail segment to final value
-            tail_mask = x_axis > rise_point
-            t = (x_axis[tail_mask] - rise_point) / (1 - rise_point)
+            tail_mask = x_axis > fall_point
+            t = (x_axis[tail_mask] - fall_point) / (1 - fall_point)
             start_tail_value = max_amplitude
             waveform[tail_mask] = start_tail_value + (final_value - start_tail_value) * \
                 (1 - np.cos(np.pi * t)) / 2
 
         # Optional: Add noise to simulate realism
         for i in range(length):
-            if np.random.rand() < 0.7:
-                waveform[i] += np.random.normal(0, 0.9)
-            if waveform[i] >= max_amplitude:
-                waveform[i] = max_amplitude - np.random.normal(0.1, 0.5)
-            elif waveform[i] <= min_amplitude:
-                waveform[i] = min_amplitude + np.random.normal(0.1, 0.5)
+            waveform[i] += np.random.normal(-0.005, 0.005)
+            # if waveform[i] > max_amplitude+1:
+            #     waveform[i] = max_amplitude
+            # elif waveform[i] <= min_amplitude:
+            #     waveform[i] = min_amplitude + np.random.normal(0.1, 0.5)
 
         waveform = np.nan_to_num(waveform)
 
-        return waveform
+        return waveform + start_value

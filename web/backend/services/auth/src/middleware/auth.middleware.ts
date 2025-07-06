@@ -40,7 +40,7 @@ export async function authenticateToken(request: FastifyRequest & Partial<Authen
   try {
 
     
-    const authAccessToken = request.cookies['accessToken'] || request.headers.authorization;
+    const authAccessToken = request.headers.authorization
     const authRefreshToken = request.cookies['refreshToken'] || request.headers['x-refresh-token'];
     if (!authAccessToken) {
         const validation = await authService.validateToken("", authRefreshToken);

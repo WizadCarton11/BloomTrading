@@ -23,6 +23,7 @@ export interface Stock {
   sector?: string;
   pe?: number;
   data?: any; // Optional field for additional data
+  visible?: boolean; // Optional field for visibility in the marketplace
 }
 
 

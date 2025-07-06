@@ -15,6 +15,8 @@ const LoginPage = React.lazy(() => import("./pages/LoginPage"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 const Home = React.lazy(() => import("./pages/Home"));
 const MarketPlace= React.lazy(() => import("./pages/StockMarketplace"));
+const SingleStockPage = React.lazy(() => import("./pages/SingleStockPage"));
+const CompareStocks = React.lazy(() => import("./pages/CompareStock"));
 const App = () => (
   
     <TooltipProvider>
@@ -27,6 +29,8 @@ const App = () => (
           <Route path="/login" element={<LoginPage />} />
           <Route path="/home" element={<Home/>}/>
           <Route path="/marketplace" element={<MarketPlace />} />
+          <Route path="/stock/:stockSymbol" element={<SingleStockPage />} />
+          <Route path="/compare/:symbols" element={<CompareStocks />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -8,6 +8,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/home/AppSidebar";
 import { MarketService } from "@/lib/api";
 import { useSingleStockSubscription, useStockSubscription } from "@/hooks/useStockSubscription";
+import { useNavigate } from "react-router-dom";
 
 // Define response shape
 interface StockApiResponse {
@@ -27,7 +28,7 @@ export default function StockMarketplace() {
   // Compare mode states
   const [isCompareMode, setIsCompareMode] = useState(false);
   const [compareSubMode, setCompareSubMode] = useState<'sector' | 'custom'>('sector');
-  const [compareSelectedSector, setCompareSelectedSector] = useState("");
+  const [compareSelectedSector, setCompareSelectedSector] = useState<string>("");
   const [selectedStockIds, setSelectedStockIds] = useState<string[]>([]);
   const [sectorList, setSectorList] = useState<string[]>([]);
   // Fetch stock data from backend
@@ -38,6 +39,10 @@ export default function StockMarketplace() {
         const response = await MarketService.get("/api/stock/stocksList", {}, "stockData");
         const result = response?.data?.data as StockApiResponse;
         if (result) {
+          result.stocks = result.stocks.map(stock => ({
+            ...stock,
+            visible: true, // Add visibility flag
+          }));
           console.log("Fetched stock data:", result);
           setStockData(result.stocks || []);
           setStockList(result.allStocksList || []);
@@ -61,11 +66,11 @@ export default function StockMarketplace() {
   
   // Compare sector change
   const handleCompareSectorChange = (sector: string) => {
-    setCompareSelectedSector(sector);
+    setCompareSelectedSector(state => sector);
     if (sector) {
       const sectorStockIds = stockData
-        .filter(stock => stock.sector === sector)
-        .map(stock => stock.id);
+        .filter(stock => (stock.sector === sector || sector === "All Sectors"))
+        .map(stock => stock.symbol);
       setSelectedStockIds(sectorStockIds);
     } else {
       setSelectedStockIds([]);
@@ -99,14 +104,72 @@ export default function StockMarketplace() {
     setCompareSubMode(mode);
     handleClearSelection();
   };
-  
+  const navigation = useNavigate();
   const handleSubmitCompare = () => {
-    console.log('Comparing stocks:', selectedStockIds);
+    navigation(`/compare/${selectedStockIds.join(',')}`, {
+      state: {
+        selectedStocks: stockData.filter(stock => selectedStockIds.includes(stock.symbol)),
+      },
+    });
   };
   
   // Derived filtered and sorted list
-  const filteredAndSortedStocks = useMemo(() => {
-    let filtered = stockData.filter((stock) => {
+  // const filteredAndSortedStocks = useMemo(() => {
+  //   let filtered = stockData.filter((stock) => {
+  //     const matchesSearch =
+  //       stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //       stock.name.toLowerCase().includes(searchTerm.toLowerCase());
+
+  //     const matchesSector =
+  //       selectedSector === "All Sectors" || stock.sector === selectedSector;
+
+  //     return matchesSearch && matchesSector;
+  //   });
+    
+    
+  //   if (isCompareMode && compareSubMode === 'sector' && selectedStockIds.length > 0) {
+  //     filtered = filtered.filter(stock => selectedStockIds.includes(stock.id));
+  //   }
+    
+  //   filtered.sort((a, b) => {
+  //     let aValue: any, bValue: any;
+      
+  //     switch (sortBy) {
+  //       case "price":
+  //         aValue = a.price;
+  //         bValue = b.price;
+  //         break;
+  //         case "change":
+  //           aValue = a.change;
+  //           bValue = b.change;
+  //           break;
+  //           case "volume":
+  //             aValue = a.volume;
+  //             bValue = b.volume;
+  //             break;
+  //             case "marketCap":
+  //               // market cap is number | bigint
+  //         // aValue = parseFloat(a.marketCap.replace(/[$TB]/g, '')) * (a.marketCap.includes('T') ? 1000 : 1);
+  //         // bValue = parseFloat(b.marketCap.replace(/[$TB]/g, '')) * (b.marketCap.includes('T') ? 1000 : 1);
+  //         aValue = typeof a.marketCap === 'bigint' ? Number(a.marketCap) : a.marketCap;
+  //         bValue = typeof b.marketCap === 'bigint' ? Number(b.marketCap) : b.marketCap;
+  //         break;
+  //       default:
+  //         aValue = a.symbol;
+  //         bValue = b.symbol;
+  //     }
+      
+  //     return sortOrder === 'asc'
+  //       ? aValue > bValue ? 1 : -1
+  //       : aValue < bValue ? 1 : -1;
+  //     });
+      
+  //     return filtered;
+  //   }, [stockData, searchTerm, selectedSector, sortBy, sortOrder, isCompareMode, compareSubMode, selectedStockIds]);
+    useEffect(() => {
+  const updatedStockData = [...stockData]  // Make a shallow copy
+
+    .map(stock => {
       const matchesSearch =
         stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
         stock.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -114,63 +177,79 @@ export default function StockMarketplace() {
       const matchesSector =
         selectedSector === "All Sectors" || stock.sector === selectedSector;
 
-      return matchesSearch && matchesSector;
-    });
-    
-    if (isCompareMode && compareSubMode === 'sector' && selectedStockIds.length > 0) {
-      filtered = filtered.filter(stock => selectedStockIds.includes(stock.id));
-    }
-    
-    filtered.sort((a, b) => {
+      const isInCompareSelection =
+        !isCompareMode || compareSubMode !== 'sector' || selectedStockIds.includes(stock.symbol);
+
+      return {
+        ...stock,
+        visible: matchesSearch && matchesSector && isInCompareSelection,
+      };
+    })
+
+    .sort((a, b) => {
       let aValue: any, bValue: any;
-      
-      switch (sortBy) {
-        case "price":
-          aValue = a.price;
-          bValue = b.price;
-          break;
-          case "change":
-            aValue = a.change;
-            bValue = b.change;
-            break;
-            case "volume":
-              aValue = a.volume;
-              bValue = b.volume;
-              break;
-              case "marketCap":
-                // market cap is number | bigint
-          // aValue = parseFloat(a.marketCap.replace(/[$TB]/g, '')) * (a.marketCap.includes('T') ? 1000 : 1);
-          // bValue = parseFloat(b.marketCap.replace(/[$TB]/g, '')) * (b.marketCap.includes('T') ? 1000 : 1);
-          aValue = typeof a.marketCap === 'bigint' ? Number(a.marketCap) : a.marketCap;
-          bValue = typeof b.marketCap === 'bigint' ? Number(b.marketCap) : b.marketCap;
-          break;
-        default:
-          aValue = a.symbol;
-          bValue = b.symbol;
+
+      // switch (sortBy) {
+      //   case "price":
+      //     aValue = a.price;
+      //     bValue = b.price;
+      //     break;
+      //     case "change":
+      //       aValue = a.change;
+      //       bValue = b.change;
+      //       break;
+      //       case "volume":
+      //         aValue = a.volume;
+      //         bValue = b.volume;
+      //         break;
+      //         case "marketCap":
+      //           aValue = typeof a.marketCap === 'bigint' ? Number(a.marketCap) : a.marketCap;
+      //           bValue = typeof b.marketCap === 'bigint' ? Number(b.marketCap) : b.marketCap;
+      //           break;
+      //           case "name":
+      //             aValue = a.name.toLowerCase().trim();
+      //             bValue = b.name.toLowerCase().trim();
+      //             break;
+      //             default:
+      //               aValue = a.symbol;
+      //               bValue = b.symbol;
+      // }
+      if (sortBy === "marketCap") {
+        aValue = !(typeof a.marketCap === 'bigint') ? (a.marketCap) : BigInt(a.marketCap);
+        bValue = !(typeof b.marketCap === 'bigint') ? (b.marketCap) : BigInt(b.marketCap);
+      } else if (sortBy === "name") {
+        aValue = a.name.toLowerCase().trim();
+        bValue = b.name.toLowerCase().trim();
+      } else {
+        aValue = a[sortBy];
+        bValue = b[sortBy];
       }
-      
+
       return sortOrder === 'asc'
         ? aValue > bValue ? 1 : -1
         : aValue < bValue ? 1 : -1;
-      });
-      
-      return filtered;
-    }, [stockData, searchTerm, selectedSector, sortBy, sortOrder, isCompareMode, compareSubMode, selectedStockIds]);
-    
+    });
+
+  setStockData(updatedStockData);
+}, [
+  stockData,
+  searchTerm,
+  selectedSector,
+  sortBy,
+  sortOrder,
+  isCompareMode,
+  compareSubMode,
+  selectedStockIds,
+]);
+
+
     const handleClearFilters = () => {
       setSelectedSector("All Sectors");
       setSortBy("symbol");
       setSortOrder('asc');
       setSearchTerm("");
     };
-    
-  if (!stockData || stockData.length === 0) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-muted-foreground text-lg">Loading stock data...</p>
-      </div>
-    );
-  }
+  
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gray-950">
@@ -210,7 +289,7 @@ export default function StockMarketplace() {
               <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                 <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
                 <div className="text-sm text-muted-foreground">
-                  Showing {filteredAndSortedStocks.length} of {stockData.length} stocks
+                  {/* Showing {filteredAndSortedStocks.length} of {stockData.length} stocks */}
                 </div>
               </div>
 
@@ -227,7 +306,7 @@ export default function StockMarketplace() {
             </div>
 
             {/* Stock Grid */}
-            <StockGrid filteredAndSortedStocks={filteredAndSortedStocks} isCompareMode={isCompareMode} 
+            <StockGrid filteredAndSortedStocks={stockData} isCompareMode={isCompareMode} 
             selectedStockIds={selectedStockIds} handleStockSelect={handleStockSelect} 
             handleClearFilters={handleClearFilters}/>
           </div>
@@ -256,10 +335,10 @@ const StockGrid = ({filteredAndSortedStocks, isCompareMode, selectedStockIds, ha
                 {filteredAndSortedStocks.map((stock, idx) => (
                   <StockCard
                     // data={stockSocketSub[idx].data}
-                    key={stock.id}
+                    key={stock.symbol}
                     stock={stock}
                     isCompareMode={isCompareMode}
-                    isSelected={selectedStockIds.includes(stock.id)}
+                    isSelected={selectedStockIds.includes(stock.symbol)}
                     onSelect={handleStockSelect}
                   />
                 ))}

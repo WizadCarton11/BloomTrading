@@ -8,9 +8,9 @@ import { StockSocketProvider } from './context/StockSocketProvider.tsx';
 
 createRoot(document.getElementById("root")!).render(
   <AppProviders>
-    <StockSocketProvider>
+    {/* <StockSocketProvider> */}
 
       <App />
-    </StockSocketProvider>
+    {/* </StockSocketProvider> */}
   </AppProviders>
 );

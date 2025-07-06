@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,3 +7,547 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model aapl {
+  level_0                BigInt   @id
+  open                   Float?
+  high                   Float?
+  low                    Float?
+  close                  Float?
+  volume                 BigInt?
+  index                  String?
+  used                   Boolean?
+  open_Trend             Float?
+  open_Seasonal          Float?
+  open_Residual          Float?
+  high_Trend             Float?
+  high_Seasonal          Float?
+  high_Residual          Float?
+  low_Trend              Float?
+  low_Seasonal           Float?
+  low_Residual           Float?
+  close_Trend            Float?
+  close_Seasonal         Float?
+  close_Residual         Float?
+  volume_Trend           Float?
+  volume_Seasonal        Float?
+  volume_Residual        Float?
+  open_EMA               Float?
+  open_Bollinger_Upper   Float?
+  open_Bollinger_Lower   Float?
+  high_EMA               Float?
+  high_Bollinger_Upper   Float?
+  high_Bollinger_Lower   Float?
+  low_EMA                Float?
+  low_Bollinger_Upper    Float?
+  low_Bollinger_Lower    Float?
+  close_EMA              Float?
+  close_Bollinger_Upper  Float?
+  close_Bollinger_Lower  Float?
+  volume_EMA             Float?
+  volume_Bollinger_Upper Float?
+  volume_Bollinger_Lower Float?
+
+  @@index([level_0], map: "ix_aapl_level_0")
+}
+
+model acn {
+  level_0                BigInt   @id
+  open                   Float?
+  high                   Float?
+  low                    Float?
+  close                  Float?
+  volume                 BigInt?
+  index                  String?
+  used                   Boolean?
+  open_Trend             Float?
+  open_Seasonal          Float?
+  open_Residual          Float?
+  high_Trend             Float?
+  high_Seasonal          Float?
+  high_Residual          Float?
+  low_Trend              Float?
+  low_Seasonal           Float?
+  low_Residual           Float?
+  close_Trend            Float?
+  close_Seasonal         Float?
+  close_Residual         Float?
+  volume_Trend           Float?
+  volume_Seasonal        Float?
+  volume_Residual        Float?
+  open_EMA               Float?
+  open_Bollinger_Upper   Float?
+  open_Bollinger_Lower   Float?
+  high_EMA               Float?
+  high_Bollinger_Upper   Float?
+  high_Bollinger_Lower   Float?
+  low_EMA                Float?
+  low_Bollinger_Upper    Float?
+  low_Bollinger_Lower    Float?
+  close_EMA              Float?
+  close_Bollinger_Upper  Float?
+  close_Bollinger_Lower  Float?
+  volume_EMA             Float?
+  volume_Bollinger_Upper Float?
+  volume_Bollinger_Lower Float?
+
+  @@index([level_0], map: "ix_acn_level_0")
+}
+
+model meta {
+  level_0                BigInt   @id
+  open                   Float?
+  high                   Float?
+  low                    Float?
+  close                  Float?
+  volume                 BigInt?
+  index                  String?
+  used                   Boolean?
+  open_Trend             Float?
+  open_Seasonal          Float?
+  open_Residual          Float?
+  high_Trend             Float?
+  high_Seasonal          Float?
+  high_Residual          Float?
+  low_Trend              Float?
+  low_Seasonal           Float?
+  low_Residual           Float?
+  close_Trend            Float?
+  close_Seasonal         Float?
+  close_Residual         Float?
+  volume_Trend           Float?
+  volume_Seasonal        Float?
+  volume_Residual        Float?
+  open_EMA               Float?
+  open_Bollinger_Upper   Float?
+  open_Bollinger_Lower   Float?
+  high_EMA               Float?
+  high_Bollinger_Upper   Float?
+  high_Bollinger_Lower   Float?
+  low_EMA                Float?
+  low_Bollinger_Upper    Float?
+  low_Bollinger_Lower    Float?
+  close_EMA              Float?
+  close_Bollinger_Upper  Float?
+  close_Bollinger_Lower  Float?
+  volume_EMA             Float?
+  volume_Bollinger_Upper Float?
+  volume_Bollinger_Lower Float?
+
+  @@index([level_0], map: "ix_meta_level_0")
+}
+
+model msft {
+  level_0                BigInt   @id
+  open                   Float?
+  high                   Float?
+  low                    Float?
+  close                  Float?
+  volume                 BigInt?
+  index                  String?
+  used                   Boolean?
+  open_Trend             Float?
+  open_Seasonal          Float?
+  open_Residual          Float?
+  high_Trend             Float?
+  high_Seasonal          Float?
+  high_Residual          Float?
+  low_Trend              Float?
+  low_Seasonal           Float?
+  low_Residual           Float?
+  close_Trend            Float?
+  close_Seasonal         Float?
+  close_Residual         Float?
+  volume_Trend           Float?
+  volume_Seasonal        Float?
+  volume_Residual        Float?
+  open_EMA               Float?
+  open_Bollinger_Upper   Float?
+  open_Bollinger_Lower   Float?
+  high_EMA               Float?
+  high_Bollinger_Upper   Float?
+  high_Bollinger_Lower   Float?
+  low_EMA                Float?
+  low_Bollinger_Upper    Float?
+  low_Bollinger_Lower    Float?
+  close_EMA              Float?
+  close_Bollinger_Upper  Float?
+  close_Bollinger_Lower  Float?
+  volume_EMA             Float?
+  volume_Bollinger_Upper Float?
+  volume_Bollinger_Lower Float?
+
+  @@index([level_0], map: "ix_msft_level_0")
+}
+
+model nflix {
+  level_0                BigInt   @id
+  open                   Float?
+  high                   Float?
+  low                    Float?
+  close                  Float?
+  volume                 BigInt?
+  index                  String?
+  used                   Boolean?
+  open_Trend             Float?
+  open_Seasonal          Float?
+  open_Residual          Float?
+  high_Trend             Float?
+  high_Seasonal          Float?
+  high_Residual          Float?
+  low_Trend              Float?
+  low_Seasonal           Float?
+  low_Residual           Float?
+  close_Trend            Float?
+  close_Seasonal         Float?
+  close_Residual         Float?
+  volume_Trend           Float?
+  volume_Seasonal        Float?
+  volume_Residual        Float?
+  open_EMA               Float?
+  open_Bollinger_Upper   Float?
+  open_Bollinger_Lower   Float?
+  high_EMA               Float?
+  high_Bollinger_Upper   Float?
+  high_Bollinger_Lower   Float?
+  low_EMA                Float?
+  low_Bollinger_Upper    Float?
+  low_Bollinger_Lower    Float?
+  close_EMA              Float?
+  close_Bollinger_Upper  Float?
+  close_Bollinger_Lower  Float?
+  volume_EMA             Float?
+  volume_Bollinger_Upper Float?
+  volume_Bollinger_Lower Float?
+
+  @@index([level_0], map: "ix_nflix_level_0")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model nflx {
+  level_0                BigInt?
+  open                   Float?
+  high                   Float?
+  low                    Float?
+  close                  Float?
+  volume                 BigInt?
+  index                  String?
+  used                   Boolean?
+  open_Trend             Float?
+  open_Seasonal          Float?
+  open_Residual          Float?
+  high_Trend             Float?
+  high_Seasonal          Float?
+  high_Residual          Float?
+  low_Trend              Float?
+  low_Seasonal           Float?
+  low_Residual           Float?
+  close_Trend            Float?
+  close_Seasonal         Float?
+  close_Residual         Float?
+  volume_Trend           Float?
+  volume_Seasonal        Float?
+  volume_Residual        Float?
+  open_EMA               Float?
+  open_Bollinger_Upper   Float?
+  open_Bollinger_Lower   Float?
+  high_EMA               Float?
+  high_Bollinger_Upper   Float?
+  high_Bollinger_Lower   Float?
+  low_EMA                Float?
+  low_Bollinger_Upper    Float?
+  low_Bollinger_Lower    Float?
+  close_EMA              Float?
+  close_Bollinger_Upper  Float?
+  close_Bollinger_Lower  Float?
+  volume_EMA             Float?
+  volume_Bollinger_Upper Float?
+  volume_Bollinger_Lower Float?
+
+  @@index([level_0], map: "ix_nflx_level_0")
+  @@ignore
+}
+
+model nvda {
+  level_0                BigInt   @id
+  open                   Float?
+  high                   Float?
+  low                    Float?
+  close                  Float?
+  volume                 BigInt?
+  index                  String?
+  used                   Boolean?
+  open_Trend             Float?
+  open_Seasonal          Float?
+  open_Residual          Float?
+  high_Trend             Float?
+  high_Seasonal          Float?
+  high_Residual          Float?
+  low_Trend              Float?
+  low_Seasonal           Float?
+  low_Residual           Float?
+  close_Trend            Float?
+  close_Seasonal         Float?
+  close_Residual         Float?
+  volume_Trend           Float?
+  volume_Seasonal        Float?
+  volume_Residual        Float?
+  open_EMA               Float?
+  open_Bollinger_Upper   Float?
+  open_Bollinger_Lower   Float?
+  high_EMA               Float?
+  high_Bollinger_Upper   Float?
+  high_Bollinger_Lower   Float?
+  low_EMA                Float?
+  low_Bollinger_Upper    Float?
+  low_Bollinger_Lower    Float?
+  close_EMA              Float?
+  close_Bollinger_Upper  Float?
+  close_Bollinger_Lower  Float?
+  volume_EMA             Float?
+  volume_Bollinger_Upper Float?
+  volume_Bollinger_Lower Float?
+
+  @@index([level_0], map: "ix_nvda_level_0")
+}
+
+model orcl {
+  level_0                BigInt   @id
+  open                   Float?
+  high                   Float?
+  low                    Float?
+  close                  Float?
+  volume                 BigInt?
+  index                  String?
+  used                   Boolean?
+  open_Trend             Float?
+  open_Seasonal          Float?
+  open_Residual          Float?
+  high_Trend             Float?
+  high_Seasonal          Float?
+  high_Residual          Float?
+  low_Trend              Float?
+  low_Seasonal           Float?
+  low_Residual           Float?
+  close_Trend            Float?
+  close_Seasonal         Float?
+  close_Residual         Float?
+  volume_Trend           Float?
+  volume_Seasonal        Float?
+  volume_Residual        Float?
+  open_EMA               Float?
+  open_Bollinger_Upper   Float?
+  open_Bollinger_Lower   Float?
+  high_EMA               Float?
+  high_Bollinger_Upper   Float?
+  high_Bollinger_Lower   Float?
+  low_EMA                Float?
+  low_Bollinger_Upper    Float?
+  low_Bollinger_Lower    Float?
+  close_EMA              Float?
+  close_Bollinger_Upper  Float?
+  close_Bollinger_Lower  Float?
+  volume_EMA             Float?
+  volume_Bollinger_Upper Float?
+  volume_Bollinger_Lower Float?
+
+  @@index([level_0], map: "ix_orcl_level_0")
+}
+
+model stock_info {
+  symbol                     String?
+  assettype                  String?
+  name                       String?
+  description                String?
+  cik                        String?
+  exchange                   String?
+  currency                   String?
+  country                    String?
+  sector                     String?
+  industry                   String?
+  address                    String?
+  officialsite               String?
+  fiscalyearend              String?
+  latestquarter              String?
+  marketcapitalization       String?
+  ebitda                     String?
+  peratio                    String?
+  pegratio                   String?
+  bookvalue                  String?
+  dividendpershare           String?
+  dividendyield              String?
+  eps                        String?
+  revenuepersharettm         String?
+  profitmargin               String?
+  operatingmarginttm         String?
+  returnonassetsttm          String?
+  returnonequityttm          String?
+  revenuettm                 String?
+  grossprofitttm             String?
+  dilutedepsttm              String?
+  quarterlyearningsgrowthyoy String?
+  quarterlyrevenuegrowthyoy  String?
+  analysttargetprice         String?
+  analystratingstrongbuy     String?
+  analystratingbuy           String?
+  analystratinghold          String?
+  analystratingsell          String?
+  analystratingstrongsell    String?
+  trailingpe                 String?
+  forwardpe                  String?
+  pricetosalesratiottm       String?
+  pricetobookratio           String?
+  evtorevenue                String?
+  evtoebitda                 String?
+  beta                       String?
+  weekhigh                   String? @map("52weekhigh")
+  weeklow                    String? @map("52weeklow")
+  daymovingaverage           String? @map("50daymovingaverage")
+  daymovingaverage200        String? @map("200daymovingaverage")
+  sharesoutstanding          String?
+  sharesfloat                String?
+  percentinsiders            String?
+  percentinstitutions        String?
+  dividenddate               String?
+  exdividenddate             String?
+  row_id                     Int     @id @default(autoincrement())
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model today {
+  price         Float?
+  stock_symbol  String?
+  volume        BigInt?
+  change        Float?
+  changePercent Float?
+
+  @@ignore
+}
+
+model tsla {
+  level_0                BigInt   @id
+  open                   Float?
+  high                   Float?
+  low                    Float?
+  close                  Float?
+  volume                 BigInt?
+  index                  String?
+  used                   Boolean?
+  open_Trend             Float?
+  open_Seasonal          Float?
+  open_Residual          Float?
+  high_Trend             Float?
+  high_Seasonal          Float?
+  high_Residual          Float?
+  low_Trend              Float?
+  low_Seasonal           Float?
+  low_Residual           Float?
+  close_Trend            Float?
+  close_Seasonal         Float?
+  close_Residual         Float?
+  volume_Trend           Float?
+  volume_Seasonal        Float?
+  volume_Residual        Float?
+  open_EMA               Float?
+  open_Bollinger_Upper   Float?
+  open_Bollinger_Lower   Float?
+  high_EMA               Float?
+  high_Bollinger_Upper   Float?
+  high_Bollinger_Lower   Float?
+  low_EMA                Float?
+  low_Bollinger_Upper    Float?
+  low_Bollinger_Lower    Float?
+  close_EMA              Float?
+  close_Bollinger_Upper  Float?
+  close_Bollinger_Lower  Float?
+  volume_EMA             Float?
+  volume_Bollinger_Upper Float?
+  volume_Bollinger_Lower Float?
+
+  @@index([level_0], map: "ix_tsla_level_0")
+}
+
+model tsm {
+  level_0                BigInt   @id
+  open                   Float?
+  high                   Float?
+  low                    Float?
+  close                  Float?
+  volume                 BigInt?
+  index                  String?
+  used                   Boolean?
+  open_Trend             Float?
+  open_Seasonal          Float?
+  open_Residual          Float?
+  high_Trend             Float?
+  high_Seasonal          Float?
+  high_Residual          Float?
+  low_Trend              Float?
+  low_Seasonal           Float?
+  low_Residual           Float?
+  close_Trend            Float?
+  close_Seasonal         Float?
+  close_Residual         Float?
+  volume_Trend           Float?
+  volume_Seasonal        Float?
+  volume_Residual        Float?
+  open_EMA               Float?
+  open_Bollinger_Upper   Float?
+  open_Bollinger_Lower   Float?
+  high_EMA               Float?
+  high_Bollinger_Upper   Float?
+  high_Bollinger_Lower   Float?
+  low_EMA                Float?
+  low_Bollinger_Upper    Float?
+  low_Bollinger_Lower    Float?
+  close_EMA              Float?
+  close_Bollinger_Upper  Float?
+  close_Bollinger_Lower  Float?
+  volume_EMA             Float?
+  volume_Bollinger_Upper Float?
+  volume_Bollinger_Lower Float?
+
+  @@index([level_0], map: "ix_tsm_level_0")
+}
+
+model wmt {
+  level_0                BigInt   @id
+  open                   Float?
+  high                   Float?
+  low                    Float?
+  close                  Float?
+  volume                 BigInt?
+  index                  String?
+  used                   Boolean?
+  open_Trend             Float?
+  open_Seasonal          Float?
+  open_Residual          Float?
+  high_Trend             Float?
+  high_Seasonal          Float?
+  high_Residual          Float?
+  low_Trend              Float?
+  low_Seasonal           Float?
+  low_Residual           Float?
+  close_Trend            Float?
+  close_Seasonal         Float?
+  close_Residual         Float?
+  volume_Trend           Float?
+  volume_Seasonal        Float?
+  volume_Residual        Float?
+  open_EMA               Float?
+  open_Bollinger_Upper   Float?
+  open_Bollinger_Lower   Float?
+  high_EMA               Float?
+  high_Bollinger_Upper   Float?
+  high_Bollinger_Lower   Float?
+  low_EMA                Float?
+  low_Bollinger_Upper    Float?
+  low_Bollinger_Lower    Float?
+  close_EMA              Float?
+  close_Bollinger_Upper  Float?
+  close_Bollinger_Lower  Float?
+  volume_EMA             Float?
+  volume_Bollinger_Upper Float?
+  volume_Bollinger_Lower Float?
+
+  @@index([level_0], map: "ix_wmt_level_0")
+}

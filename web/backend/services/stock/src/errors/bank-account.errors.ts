@@ -147,3 +147,14 @@ export class InvalidRefreshTokenError extends CustomError {
     super(message, 401, 'INVALID_REFRESH_TOKEN', metadata);
   }
 }
+
+export class StockNotFoundError extends CustomError {
+  constructor(message = 'Stock not found', metadata: any = {}) {
+    super(message, 404, 'STOCK_NOT_FOUND', metadata);
+  }
+}
+export class InvalidSymbolsError extends CustomError {
+  constructor(message = 'Invalid stock symbols provided', metadata: any = {}) {
+    super(message, 422, 'INVALID_SYMBOLS', metadata);
+  }
+}

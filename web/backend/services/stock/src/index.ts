@@ -36,6 +36,10 @@ const app = fastify({
         }
       }
 });
+import compress from '@fastify/compress';
+
+
+
 
 app.register(require('@fastify/cookie'), {
   secret: process.env.COOKIE_SECRET || 'default-secret', // ⬅️ Required
@@ -158,7 +162,11 @@ async function loadPlugins(): Promise<void> {
     origin: (origin: string | undefined, cb: CorsOriginCallback) => void;
     credentials: boolean;
   }
-
+  await app.register(compress, {
+    global: true,
+    encodings: ['gzip', 'deflate'],
+    threshold: 1024 // Only compress responses larger than 1KB
+  });
   await app.register(require('@fastify/cors'), {
     origin: (origin: string | undefined, cb: CorsOriginCallback) => {
       const allowedOrigins: string[] = ['http://localhost:3000', 'https://yourfrontend.com'];

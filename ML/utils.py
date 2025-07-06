@@ -51,7 +51,7 @@ def simulate_stock_streaming(flag):
                     message = {"symbol": symbol, "data": row}
                     producer.send("live_stock_data", value=message, key=symbol.encode('utf-8'))
                     # print(f"📤 [{symbol}] Sent to {topic}: {row}")
-                    time.sleep(0.2)
+                    time.sleep(0.1)
                     # print(f"📤 [{symbol}] Sent to {topic}: {row}")
                 except StopIteration:
                     print(f"✅ Completed streaming {symbol}")
@@ -62,7 +62,7 @@ def simulate_stock_streaming(flag):
                 del generators[symbol]
 
             producer.flush()
-            time.sleep(0.3)
+            time.sleep(0.2)
 
     except KeyboardInterrupt:
         print("\n⛔ Interrupted by user.")
