@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import * as StockErrors from '../errors/index';
 import { StocksResponseInterface } from './stocks.interface';
 import { bindAllMethods } from '../utils/bind-all-methods';
+import { sendKafkaMessage } from '../utils/kafka.producer';
 
 const prisma = new PrismaClient();
 
@@ -67,7 +68,7 @@ class StockService {
         const historicalData: any = await prisma.$queryRawUnsafe(historicalQuery);
         const latestDate = historicalData.length > 0 ? historicalData[0].index : null;
         const stock = stockData[0];
-        
+
         return {
             id: uuidv4(),
             ...stock,
@@ -98,118 +99,86 @@ class StockService {
         if (stockData.length === 0) {
             throw new StockErrors.StockNotFoundError(`No stocks found for the provided symbols`);
         }
-// "symbol"
-// "assettype"
-// "name"
-// "description"
-// "cik"
-// "exchange"
-// "currency"
-// "country"
-// "sector"
-// "industry"
-// "address"
-// "officialsite"
-// "fiscalyearend"
-// "latestquarter"
-// "marketcapitalization"
-// "ebitda"
-// "peratio"
-// "pegratio"
-// "bookvalue"
-// "dividendpershare"
-// "dividendyield"
-// "eps"
-// "revenuepersharettm"
-// "profitmargin"
-// "operatingmarginttm"
-// "returnonassetsttm"
-// "returnonequityttm"
-// "revenuettm"
-// "grossprofitttm"
-// "dilutedepsttm"
-// "quarterlyearningsgrowthyoy"
-// "quarterlyrevenuegrowthyoy"
-// "analysttargetprice"
-// "analystratingstrongbuy"
-// "analystratingbuy"
-// "analystratinghold"
-// "analystratingsell"
-// "analystratingstrongsell"
-// "trailingpe"
-// "forwardpe"
-// "pricetosalesratiottm"
-// "pricetobookratio"
-// "evtorevenue"
-// "evtoebitda"
-// "beta"
-// "52weekhigh"
-// "52weeklow"
-// "50daymovingaverage"
-// "200daymovingaverage"
-// "sharesoutstanding"
-// "sharesfloat"
-// "percentinsiders"
-// "percentinstitutions"
-// "dividenddate"
-// "exdividenddate"
-// "row_id"
-         return stockData.map((stock: any) => ({
-        symbol: stock.symbol,
-        name: stock.name,
-        description: stock.description,
-        sector: stock.sector,
-        industry: stock.industry,
-        marketcapitalization: stock.marketcapitalization,
-        peratio: stock.peratio,
-        eps: stock.eps,
-        dividendyield: stock.dividendyield,
-        beta: stock.beta,
-        "52weekhigh": stock['52weekhigh'],
-        "52weeklow": stock['52weeklow'],
-        revenuettm: stock.revenuettm,
-        profitmargin: stock.profitmargin,
-        operatingmarginttm: stock.operatingmarginttm,
-        returnonequityttm: stock.returnonequityttm,
-        quarterlyearningsgrowthyoy: stock.quarterlyearningsgrowthyoy,
-        analysttargetprice: stock.analysttargetprice,
-        analystratingstrongbuy: stock.analystratingstrongbuy,
-        analystratingbuy: stock.analystratingbuy,
-        analystratinghold: stock.analystratinghold,
-        analystratingsell: stock.analystratingsell,
-        analystratingstrongsell: stock.analystratingstrongsell,
-        trailingpe: stock.trailingpe,
-        forwardpe: stock.forwardpe,
-        pricetosalesratiottm: stock.pricetosalesratiottm,
-        pricetobookratio: stock.pricetobookratio,
-        evtorevenue: stock.evtorevenue,
-        evtoebitda: stock.evtoebitda,
-        "50daymovingaverage": stock['50daymovingaverage'],
-        "200daymovingaverage": stock['200daymovingaverage'],
-        sharesoutstanding: stock.sharesoutstanding,
-        sharesfloat: stock.sharesfloat,
-        percentinsiders: stock.percentinsiders,
-        percentinstitutions: stock.percentinstitutions,
-        dividenddate: stock.dividenddate,
-        exdividenddate: stock.exdividenddate,
-        cik: stock.cik,
-        currency: stock.currency,
-        country: stock.country,
-        address: stock.address,
-        officialsite: stock.officialsite,
-        fiscalyearend: stock.fiscalyearend,
-        latestquarter: stock.latestquarter,
-        row_id: stock.row_id,
-        assettype: stock.assettype,
-        ebitda: stock.ebitda,
-        bookvalue: stock.bookvalue,
-        revenuepersharettm: stock.revenuepersharettm,
-        grossprofitttm: stock.grossprofitttm,
-        dilutedepsttm: stock.dilutedepsttm,
-        quarterlyrevenuegrowthyoy: stock.quarterlyrevenuegrowthyoy,
-        // Add any other fields you need from stock_info
-        id: uuidv4() // Generate a unique ID for each stock
-    }));
+
+        return stockData.map((stock: any) => ({
+            symbol: stock.symbol,
+            name: stock.name,
+            description: stock.description,
+            sector: stock.sector,
+            industry: stock.industry,
+            marketcapitalization: stock.marketcapitalization,
+            peratio: stock.peratio,
+            eps: stock.eps,
+            dividendyield: stock.dividendyield,
+            beta: stock.beta,
+            "52weekhigh": stock['52weekhigh'],
+            "52weeklow": stock['52weeklow'],
+            revenuettm: stock.revenuettm,
+            profitmargin: stock.profitmargin,
+            operatingmarginttm: stock.operatingmarginttm,
+            returnonequityttm: stock.returnonequityttm,
+            quarterlyearningsgrowthyoy: stock.quarterlyearningsgrowthyoy,
+            analysttargetprice: stock.analysttargetprice,
+            analystratingstrongbuy: stock.analystratingstrongbuy,
+            analystratingbuy: stock.analystratingbuy,
+            analystratinghold: stock.analystratinghold,
+            analystratingsell: stock.analystratingsell,
+            analystratingstrongsell: stock.analystratingstrongsell,
+            trailingpe: stock.trailingpe,
+            forwardpe: stock.forwardpe,
+            pricetosalesratiottm: stock.pricetosalesratiottm,
+            pricetobookratio: stock.pricetobookratio,
+            evtorevenue: stock.evtorevenue,
+            evtoebitda: stock.evtoebitda,
+            "50daymovingaverage": stock['50daymovingaverage'],
+            "200daymovingaverage": stock['200daymovingaverage'],
+            sharesoutstanding: stock.sharesoutstanding,
+            sharesfloat: stock.sharesfloat,
+            percentinsiders: stock.percentinsiders,
+            percentinstitutions: stock.percentinstitutions,
+            dividenddate: stock.dividenddate,
+            exdividenddate: stock.exdividenddate,
+            cik: stock.cik,
+            currency: stock.currency,
+            country: stock.country,
+            address: stock.address,
+            officialsite: stock.officialsite,
+            fiscalyearend: stock.fiscalyearend,
+            latestquarter: stock.latestquarter,
+            row_id: stock.row_id,
+            assettype: stock.assettype,
+            ebitda: stock.ebitda,
+            bookvalue: stock.bookvalue,
+            revenuepersharettm: stock.revenuepersharettm,
+            grossprofitttm: stock.grossprofitttm,
+            dilutedepsttm: stock.dilutedepsttm,
+            quarterlyrevenuegrowthyoy: stock.quarterlyrevenuegrowthyoy,
+            // Add any other fields you need from stock_info
+            id: uuidv4() // Generate a unique ID for each stock
+        }));
+    }
+
+    async addToPortfolio(userId: string, transationId: string, symbol: string, quantity: number, amount: number, averagePrice: number): Promise<void> {
+        await prisma.portfolio.create({
+            data: {
+                userId,
+                symbol,
+                quantity,
+                totalValue: amount,
+                transactionId: transationId,
+                averageCost: averagePrice,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            }
+        });
+        await sendKafkaMessage('transactions_success', {
+            event: 'transaction_completed',
+            data: {
+                transactionId: transationId,
+                userId: userId,
+            }
+        })
+        console.log(`💰 Transaction completed for user ${userId} with stock ${symbol}`);
     }
 }
 
@@ -217,7 +186,8 @@ const stockServiceInstance = new StockService();
 
 export const { getStocks,
     getStockBySymbol,
-    getStocksDetails
+    getStocksDetails,
+    addToPortfolio
 } = bindAllMethods(stockServiceInstance);
 // export const createAccount = accountServiceInstance.createAccount.bind(accountServiceInstance);
 // export const getUserAccounts = accountServiceInstance.getUserAccounts.bind(accountServiceInstance);

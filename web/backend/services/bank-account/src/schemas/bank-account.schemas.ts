@@ -103,8 +103,22 @@ export const authHeaderSchema = z
   .regex(/^Bearer\s+[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]*$/, {
     message: 'Invalid authorization header format'
   });
+export const buyStockSchema = z.object({
+  transactionId: uuidSchema,
+  stockSymbol: stringSchema,
+  amount: numberSchema,
+  numberOfShares: numberSchema.optional().default(1),
+  // average price is decimal, can be 0
+  averagePrice: z
+    .number()
+    .min(0, { message: 'Average price must be a non-negative number' })
+}).strict().refine(data => data.amount > 0, {
+  message: 'Amount must be greater than zero'
+});
 // Export types derived from schemas
 export type RegisterRequest = z.infer<typeof registerSchema>;
 export type LoginRequest = z.infer<typeof loginSchema>;
 export type RefreshTokenRequest = z.infer<typeof refreshTokenSchema>;
 export type CreateAccountRequest = z.infer<typeof createAccountSchema>;
+export type AuthHeader = z.infer<typeof authHeaderSchema>;
+export type BuyStockRequest = z.infer<typeof buyStockSchema>;

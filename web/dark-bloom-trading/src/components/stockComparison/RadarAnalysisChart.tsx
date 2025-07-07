@@ -23,6 +23,30 @@ const RadarAnalysisChart: React.FC<RadarAnalysisChartProps> = ({ radarData, sele
     ...radarData.reduce((acc, stock) => ({ ...acc, [stock.stock]: stock[key as keyof typeof stock] }), {})
   })) : [];
 
+  // Extended color palette to support more stocks
+  const colors = [
+  '#3B82F6', // Blue
+  '#8B5CF6', // Purple
+  '#10B981', // Green
+  '#F59E0B', // Amber
+  '#EF4444', // Red
+  '#06B6D4', // Cyan
+  '#8B5CF6', // Violet
+  '#F97316', // Orange
+  '#84CC16', // Lime
+  '#EC4899', // Pink
+  '#6366F1', // Indigo
+  '#14B8A6', // Teal
+  '#F43F5E', // Rose
+  '#22D3EE', // Light Cyan
+  '#A855F7', // Deep Purple
+  '#EAB308', // Gold
+  '#4ADE80', // Light Green
+  '#F87171', // Light Red
+  '#FB923C', // Light Orange
+  '#2DD4BF', // Aquamarine
+];
+
   return (
     <Card className="bg-card hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 group">
       <CardHeader>
@@ -43,8 +67,8 @@ const RadarAnalysisChart: React.FC<RadarAnalysisChartProps> = ({ radarData, sele
                   key={stock.symbol}
                   name={stock.symbol}
                   dataKey={stock.symbol}
-                  stroke={['#3B82F6', '#8B5CF6', '#10B981'][index]}
-                  fill={['#3B82F6', '#8B5CF6', '#10B981'][index]}
+                  stroke={colors[index % colors.length]}
+                  fill={colors[index % colors.length]}
                   fillOpacity={0.1}
                   strokeWidth={2}
                 />

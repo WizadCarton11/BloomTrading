@@ -149,3 +149,15 @@ export class TokenValidationError extends CustomError {
     super(message, 401, 'TOKEN_VALIDATION_ERROR', metadata);
   }
 }
+
+export class InvalidTransactionStateError extends CustomError {
+  constructor(transactionId: string, metadata: any = {}) {
+    super(`Transaction ${transactionId} is in an invalid state for this operation`, 400, 'INVALID_TRANSACTION_STATE', { transactionId, ...metadata });
+  }
+}
+
+export class TransactionInvalidStatusError extends CustomError {
+  constructor(transactionId: string, status: string, metadata: any = {}) {
+    super(`Transaction ${transactionId} has an invalid status: ${status}`, 400, 'TRANSACTION_INVALID_STATUS', { transactionId, status, ...metadata });
+  }
+}

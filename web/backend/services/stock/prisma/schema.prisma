@@ -7,6 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model portfolio {
+  id            String   @id @default(uuid())
+  userId        String
+  transactionId String?  @unique
+  symbol        String
+  quantity      Float
+  averageCost   Float
+  totalValue    Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId, symbol], map: "ix_portfolio_user_symbol")
+}
+
 model aapl {
   level_0                BigInt   @id
   open                   Float?
@@ -91,6 +105,51 @@ model acn {
   volume_Bollinger_Lower Float?
 
   @@index([level_0], map: "ix_acn_level_0")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model googl {
+  level_0                BigInt?
+  open                   Float?
+  high                   Float?
+  low                    Float?
+  close                  Float?
+  volume                 BigInt?
+  index                  String?
+  used                   Boolean?
+  open_Trend             Float?
+  open_Seasonal          Float?
+  open_Residual          Float?
+  high_Trend             Float?
+  high_Seasonal          Float?
+  high_Residual          Float?
+  low_Trend              Float?
+  low_Seasonal           Float?
+  low_Residual           Float?
+  close_Trend            Float?
+  close_Seasonal         Float?
+  close_Residual         Float?
+  volume_Trend           Float?
+  volume_Seasonal        Float?
+  volume_Residual        Float?
+  open_EMA               Float?
+  open_Bollinger_Upper   Float?
+  open_Bollinger_Lower   Float?
+  high_EMA               Float?
+  high_Bollinger_Upper   Float?
+  high_Bollinger_Lower   Float?
+  low_EMA                Float?
+  low_Bollinger_Upper    Float?
+  low_Bollinger_Lower    Float?
+  close_EMA              Float?
+  close_Bollinger_Upper  Float?
+  close_Bollinger_Lower  Float?
+  volume_EMA             Float?
+  volume_Bollinger_Upper Float?
+  volume_Bollinger_Lower Float?
+
+  @@index([level_0], map: "ix_googl_level_0")
+  @@ignore
 }
 
 model meta {

@@ -5,9 +5,10 @@ import { CreateAccountBody, AccountParams, TransferBody, TransactionQuery, Creat
 import * as AccountErrors from '../errors/index';
 import { access } from 'fs';
 import { validateBody } from '../middleware/accounts.middleware';
-import { CreateAccountRequest, createAccountSchema } from '../schemas';
+import { buyStockSchema, CreateAccountRequest, createAccountSchema } from '../schemas';
 import i18next from 'i18next';
 import { cacheWithRevalidation } from '../utils/cahce_with_revalidation';
+import { BuyStockRequest } from '../services/account-object.interface';
 
 interface AuthenticatedRequest extends FastifyRequest {
   userId?: string;
@@ -121,6 +122,83 @@ async function accountRoutes(fastify: FastifyInstance): Promise<void> {
       return {
         message: t(error.metadata.langKey || 'account.get.error'),
         error: error.message || 'An error occurred during registration',
+        statusCode: error.statusCode || 500,
+        code: error.code || 'INTERNAL_SERVER_ERROR',
+        details: error.details || null
+      } as any;
+    }
+  });
+
+  fastify.get('/initiate_transaction', {
+    preHandler: authenticate
+  }, async (request: AuthenticatedRequest, reply: FastifyReply) => {
+    try {
+      const lang= request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);
+      if (!request.userId) {
+        return reply.code(401).send({ error: 'User ID not found' });
+      }
+      const userId = request.userId;;
+
+
+      const transaction = await accountService.initiateTransaction({
+        userId,
+      });
+
+      reply.send({
+        message: t('account.transaction.initiated'),
+        accessToken: request.accessToken,
+        data: transaction
+      });
+    } catch (error: any) {
+      console.error(error);
+      const lang= request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);
+      return {
+        message: t(error.metadata.langKey || 'account.transaction.error'),
+        error: error.message || 'An error occurred during transaction initiation',
+        statusCode: error.statusCode || 500,
+        code: error.code || 'INTERNAL_SERVER_ERROR',
+        details: error.details || null
+      } as any;
+    }
+  });
+
+  fastify.post<{ Body: BuyStockRequest}>('/buy_stock', {
+    preHandler: [authenticate, validateBody(buyStockSchema)]
+  }, async (request: AuthenticatedRequest, reply: FastifyReply) => {
+    try {
+      const lang= request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);
+      if (!request.userId) {
+        return reply.code(401).send({ error: 'User ID not found' });
+      }
+      const { transactionId, stockSymbol, amount, numberOfShares } = request.body as BuyStockRequest;
+
+      if (!transactionId || !stockSymbol || !amount) {
+        throw new AccountErrors.ValidationError('Transaction ID, stock symbol and amount are required');
+      }
+
+      const transaction = await accountService.buyStock({
+        userId: request.userId,
+        transactionId,
+        stockSymbol,
+        amount,
+        numberOfShares: numberOfShares || 1
+      });
+
+      reply.send({
+        message: t('account.stock.purchase.success'),
+        accessToken: request.accessToken,
+        data: transaction
+      });
+    } catch (error: any) {
+      console.error(error);
+      const lang= request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);
+      return {
+        message: t(error.metadata.langKey || 'account.stock.purchase.error'),
+        error: error.message || 'An error occurred during stock purchase',
         statusCode: error.statusCode || 500,
         code: error.code || 'INTERNAL_SERVER_ERROR',
         details: error.details || null

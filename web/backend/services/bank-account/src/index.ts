@@ -7,6 +7,8 @@ import { initI18n } from './i18';
 import { RateLimitOptions, RateLimitErrorContext } from './index.interface';
 import i18next from 'i18next';
 import * as grpcServer from './grpc-server';
+import { createKafkaProducer } from './utils/kafka.producer';
+import { createKafkaConsumer } from './utils/kafka.consumer';
 const redisClient = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
@@ -37,8 +39,6 @@ app.addHook('preHandler', async (request, reply) => {
   const lang = request.headers['accept-language']?.split(',')[0] || 'en';
   request.headers['x-lang'] = lang; // Optional: attach to header for reuse
 });
-
-// Define interfaces for rate limit options
 
 
 app.register(require('@fastify/rate-limit'), {
@@ -129,6 +129,7 @@ async function loadRoutes(): Promise<void> {
 app.get('/health', async (request, reply) => {
   const lang = request.headers['x-lang'] || 'en';
   const t = i18next.getFixedT(lang);
+  
   return { status: 'healthy', service: t('healthCheck') };
 });
 
@@ -136,9 +137,17 @@ async function start(): Promise<void> {
   try {
     // Load plugins and routes
     await initI18n();
+    console.log('Initializing i18n...');
     await loadPlugins();
+    console.log('Loading plugins...');
     await loadRoutes();
+    console.log('Loading routes...');
     grpcServer.start();
+    console.log('Starting gRPC server...');
+    await createKafkaProducer();
+    console.log('Creating Kafka producer...');
+    await createKafkaConsumer();
+    console.log('Creating Kafka consumer...');
     // Start HTTP server
     const port = parseInt(process.env.HTTP_PORT || '3002');
     await app.listen({ port, host: '0.0.0.0' });

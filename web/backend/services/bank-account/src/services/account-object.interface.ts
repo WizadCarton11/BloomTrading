@@ -1,4 +1,5 @@
 import { PrismaClient, Account, Transaction, TransactionType } from '@prisma/client';
+import { FastifyRequest } from 'fastify';
 export interface CreateAccountData {
   userId: string;
   accountType: string;
@@ -64,4 +65,32 @@ export interface TransferResponse {
   transferReference: string;
   fromTransaction: TransactionResponse;
   toTransaction: TransactionResponse;
+}
+
+export interface InitiateTransactionRequest {
+  userId: string;
+}
+
+export interface InitiateTransactionResponse {
+  transactionId: string;
+  status: string;
+  message?: string;
+}
+interface AuthenticatedRequest extends FastifyRequest {
+  userId?: string;
+  accessToken?: string;
+}
+
+export interface BuyStockRequest extends AuthenticatedRequest {
+  transactionId: string;
+  stockSymbol: string;
+  amount: number;
+  numberOfShares?: number;
+  averagePrice?: number;
+}
+
+export interface BuyStockResponse {
+  transactionId: string;
+  status: string;
+  message?: string;
 }

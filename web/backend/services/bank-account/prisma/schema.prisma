@@ -48,6 +48,7 @@ enum TransactionType {
 }
 
 enum TransactionStatus {
+  INITIALIZED
   PENDING
   SUCCESS
   FAILED

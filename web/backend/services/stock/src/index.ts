@@ -37,6 +37,7 @@ const app = fastify({
       }
 });
 import compress from '@fastify/compress';
+import { createKafkaProducer } from './utils/kafka.producer';
 
 
 
@@ -204,15 +205,23 @@ async function start(): Promise<void> {
   try {
     // Load plugins and routes
     await initI18n();
+    console.log('Initializing i18n...');
     await loadPlugins();
+    console.log('Loading plugins...');
     await loadRoutes();
+    console.log('Loading routes...');
     await grpcServer.start();
+    console.log('Starting gRPC server...');
     // Start HTTP server
+    const io=setupWebSocket(app);
+    console.log('Setting up WebSocket server...');
+    await createKafkaConsumer(io);
+    console.log('Creating Kafka consumer...');
+    await createKafkaProducer();
+    console.log('Creating Kafka producer...');
     const port = parseInt(process.env.HTTP_PORT || '3003');
     await app.listen({ port, host: '0.0.0.0' });
 
-    const io=setupWebSocket(app);
-    await createKafkaConsumer(io);
     
     console.log(`Stock service HTTP server running on port ${port}`);
   } catch (error) {
