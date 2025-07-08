@@ -49,7 +49,7 @@ export const createKafkaConsumer = async (io: SocketIOServer) => {
           await redisClient.expire(key, 86400); // 24 hours
 
           io.to(symbol.trim()).emit('stock-update', { symbol, data });
-          console.log(`📈 Live stock update sent for ${symbol}`);
+          // console.log(`📈 Live stock update sent for ${symbol}`);
         } 
         
         else if (topic === 'transactions') {

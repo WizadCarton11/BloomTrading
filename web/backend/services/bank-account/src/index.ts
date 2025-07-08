@@ -9,6 +9,7 @@ import i18next from 'i18next';
 import * as grpcServer from './grpc-server';
 import { createKafkaProducer } from './utils/kafka.producer';
 import { createKafkaConsumer } from './utils/kafka.consumer';
+import '@fastify/cookie';
 const redisClient = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
@@ -35,6 +36,29 @@ const app = fastify({
         }
       }
 });
+app.register(require('@fastify/cookie'), {
+  secret: process.env.COOKIE_SECRET || 'default-secret', // ⬅️ Required
+  hook: 'onRequest',
+  parseOptions: {
+    path: '/',
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'lax',
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+    signed: true, // ⬅️ Required
+  },
+});
+app.addHook('onRequest', async (request, _reply) => {
+  const raw = request.cookies['refreshToken'];
+  console.log('Raw cookie:', raw);
+  if (raw) {
+    const { value, valid } = request.unsignCookie(raw);
+    if (valid) {
+      request.cookies['refreshToken'] = value;
+    }
+  }
+});
+
 app.addHook('preHandler', async (request, reply) => {
   const lang = request.headers['accept-language']?.split(',')[0] || 'en';
   request.headers['x-lang'] = lang; // Optional: attach to header for reuse
@@ -113,9 +137,27 @@ app.setErrorHandler((error, request, reply) => {
 
 // Load plugins
 async function loadPlugins(): Promise<void> {
+   interface CorsOriginCallback {
+    (error: Error | null, allow: boolean): void;
+  }
+
+  interface CorsOptions {
+    origin: (origin: string | undefined, cb: CorsOriginCallback) => void;
+    credentials: boolean;
+  }
+
   await app.register(require('@fastify/cors'), {
-    origin: true
-  });
+    origin: (origin: string | undefined, cb: CorsOriginCallback) => {
+      const allowedOrigins: string[] = ['http://localhost:3000', 'https://yourfrontend.com'];
+      if (!origin || allowedOrigins.includes(origin)) {
+        cb(null, true);
+      } else {
+        console.warn(`CORS request from disallowed origin: ${origin}`);
+        cb(new Error("Not allowed by CORS"), false);
+      }
+    },
+    credentials: true
+  } as CorsOptions);
   
   await app.register(require('@fastify/helmet'));
 }

@@ -381,7 +381,10 @@ export const MarketService = new ApiService({
   baseURL: import.meta.env.VITE_API_STOCK_BACKEND_URL,
   timeout: 15000,
 });
-
+export const BankService = new ApiService({
+  baseURL: import.meta.env.VITE_API_BANK_BACKEND_URL,
+  timeout: 15000,
+});
 // Export the class for creating additional instances if needed
 export { ApiService };
 

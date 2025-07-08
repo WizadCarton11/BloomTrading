@@ -18,15 +18,17 @@ interface AuthenticatedRequest extends FastifyRequest {
 // Auth middleware
 async function authenticate(request: AuthenticatedRequest, reply: FastifyReply): Promise<void> {
   try {
-    const token = request.headers.authorization?.replace('Bearer ', '');
-    const refreshtoken= request.headers['x-refresh-token'] as string;
+    const authAccessToken :string  = request.headers.authorization?.split('Bearer ')[1] || ""
+    console.log('authAccessToken', authAccessToken);
+    const refreshTokenHeader = request.headers['x-refresh-token'];
+    const authRefreshToken : string = request.cookies['refreshToken'] || (Array.isArray(refreshTokenHeader) ? refreshTokenHeader[0] : refreshTokenHeader) || "";
     const lang= request.headers['x-lang'] || 'en';
     const t = i18next.getFixedT(lang);
-    if (!token) {
+    if (!authAccessToken && !authRefreshToken) {
       throw new AccountErrors.UnauthorizedError('No authorization token provided');
     }
 
-    const validation = await grpcClient.validateToken(token, refreshtoken);
+    const validation = await grpcClient.validateToken(authAccessToken, authRefreshToken);
     if (!validation.valid) {
       console.error(validation.error);
       if (validation.error?.toLowerCase() === 'jwt expired') {
@@ -80,13 +82,7 @@ async function accountRoutes(fastify: FastifyInstance): Promise<void> {
       console.error(error);
       const lang= request.headers['x-lang'] || 'en';
       const t = i18next.getFixedT(lang);
-      return {
-        message: t(error.metadata.langKey || 'account.create.error'),
-        error: error.message || 'An error occurred during registration',
-        statusCode: error.statusCode || 500,
-        code: error.code || 'INTERNAL_SERVER_ERROR',
-        details: error.details || null
-      } as any;
+      throw error
     }
   });
 
@@ -154,13 +150,7 @@ async function accountRoutes(fastify: FastifyInstance): Promise<void> {
       console.error(error);
       const lang= request.headers['x-lang'] || 'en';
       const t = i18next.getFixedT(lang);
-      return {
-        message: t(error.metadata.langKey || 'account.transaction.error'),
-        error: error.message || 'An error occurred during transaction initiation',
-        statusCode: error.statusCode || 500,
-        code: error.code || 'INTERNAL_SERVER_ERROR',
-        details: error.details || null
-      } as any;
+      throw error;
     }
   });
 
@@ -173,7 +163,8 @@ async function accountRoutes(fastify: FastifyInstance): Promise<void> {
       if (!request.userId) {
         return reply.code(401).send({ error: 'User ID not found' });
       }
-      const { transactionId, stockSymbol, amount, numberOfShares } = request.body as BuyStockRequest;
+      console.log(request.body);
+      const { transactionId, stockSymbol, amount, numberOfShares , averagePrice} = request.body as BuyStockRequest;
 
       if (!transactionId || !stockSymbol || !amount) {
         throw new AccountErrors.ValidationError('Transaction ID, stock symbol and amount are required');
@@ -184,7 +175,8 @@ async function accountRoutes(fastify: FastifyInstance): Promise<void> {
         transactionId,
         stockSymbol,
         amount,
-        numberOfShares: numberOfShares || 1
+        numberOfShares: numberOfShares || 1,
+        averagePrice: averagePrice || 0
       });
 
       reply.send({
@@ -196,13 +188,8 @@ async function accountRoutes(fastify: FastifyInstance): Promise<void> {
       console.error(error);
       const lang= request.headers['x-lang'] || 'en';
       const t = i18next.getFixedT(lang);
-      return {
-        message: t(error.metadata.langKey || 'account.stock.purchase.error'),
-        error: error.message || 'An error occurred during stock purchase',
-        statusCode: error.statusCode || 500,
-        code: error.code || 'INTERNAL_SERVER_ERROR',
-        details: error.details || null
-      } as any;
+      console.error('Error in buy_stock:', error);
+      throw error;
     }
   });
 

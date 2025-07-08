@@ -71,11 +71,4 @@ export const authHeaderSchema = z
     message: 'Invalid authorization header format'
   });
 
-export const buyStockSchema = z.object({
-  transactionId: uuidSchema,
-  stockSymbol: stringSchema,
-  amount: numberSchema
-}).strict().refine(data => data.amount > 0, {
-  message: 'Amount must be greater than zero'
-});
 // Export types derived from schemas

@@ -159,6 +159,39 @@ class StockService {
     }
 
     async addToPortfolio(userId: string, transationId: string, symbol: string, quantity: number, amount: number, averagePrice: number): Promise<void> {
+        const alreadyExists = await prisma.portfolio.findFirst({
+            where: {
+                userId: userId,
+                symbol: symbol  
+            }
+        });
+        if (alreadyExists) {
+            // Update existing portfolio entry
+            await prisma.portfolio.update({
+                where: {
+                    id: alreadyExists.id,
+                    userId: userId,
+                    symbol: symbol
+                },
+                data: {
+                    quantity: alreadyExists.quantity + quantity,
+                    totalValue: alreadyExists.totalValue + amount,
+                    averageCost: ((alreadyExists.totalValue + amount) / (alreadyExists.quantity + quantity)),
+                    updatedAt: new Date(),
+                    transactionId: transationId
+                }
+            });
+            await sendKafkaMessage('transactions_success', {
+                event: 'transaction_completed',
+                data: {
+                    transactionId: transationId,
+                    userId: userId,
+                }
+            })    
+            console.log(`💰 Transaction completed for user ${userId} with stock ${symbol}`);
+            return;
+        }
+        
         await prisma.portfolio.create({
             data: {
                 userId,
@@ -180,6 +213,20 @@ class StockService {
         })
         console.log(`💰 Transaction completed for user ${userId} with stock ${symbol}`);
     }
+
+    async getPortfolio(userId: string) {
+        const portfolio = await prisma.portfolio.findMany({
+            where: {
+                userId: userId
+            }
+        });
+        const listOfAllSymbols = portfolio.map(item => item.symbol);
+
+        return {
+            portfolio,
+            listOfAllSymbols
+        }
+    }
 }
 
 const stockServiceInstance = new StockService();
@@ -187,7 +234,8 @@ const stockServiceInstance = new StockService();
 export const { getStocks,
     getStockBySymbol,
     getStocksDetails,
-    addToPortfolio
+    addToPortfolio,
+    getPortfolio
 } = bindAllMethods(stockServiceInstance);
 // export const createAccount = accountServiceInstance.createAccount.bind(accountServiceInstance);
 // export const getUserAccounts = accountServiceInstance.getUserAccounts.bind(accountServiceInstance);

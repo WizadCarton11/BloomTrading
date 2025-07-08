@@ -14,7 +14,6 @@ interface AuthenticatedRequest extends FastifyRequest {
 async function authenticate(request: FastifyRequest & Partial<AuthenticatedRequest>,  reply: FastifyReply): Promise<void> {
   try {
     const authAccessToken :string  = request.headers.authorization?.split('Bearer ')[1] || ""
-    console.log('authAccessToken', authAccessToken);
     const refreshTokenHeader = request.headers['x-refresh-token'];
     const authRefreshToken : string = request.cookies['refreshToken'] || (Array.isArray(refreshTokenHeader) ? refreshTokenHeader[0] : refreshTokenHeader) || "";
     const lang= request.headers['x-lang'] || 'en';
@@ -221,6 +220,43 @@ async function stockRoutes(fastify: FastifyInstance): Promise<void> {
       const lang= request.headers['x-lang'] || 'en';
       const t = i18next.getFixedT(lang);
 
+      return {
+        message: t(error.metadata.langKey || 'account.create.error'),
+        error: error.message || 'An error occurred during registration',
+        statusCode: error.statusCode || 500,
+        code: error.code || 'INTERNAL_SERVER_ERROR',
+        details: error.details || null
+      } as any;
+    }
+  });
+
+  fastify.get('/get_portfolio', {
+    preHandler: [authenticate],
+  }, async (request: AuthenticatedRequest, reply: FastifyReply) => {
+    try {
+      const lang = request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);
+      // user redis
+      const userId = request.userId;
+      if (!userId) {
+        throw new StockErrors.ValidationError('User ID is required');
+      }
+      const cacheKey = `portfolio:${userId}`;
+      const result = await cacheWithRevalidation({
+        key: cacheKey,
+        ttl: 10000,
+        fetchFn: async () => {
+          return StockService.getPortfolio(userId);
+        }
+      });
+      return reply.send({ message: t('stock.get.success'),
+         data: result.data, accessToken: request.accessToken,
+        fromCache: result.fromCache
+        });
+    } catch (error: any) {
+      console.error(error);
+      const lang= request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);      
       return {
         message: t(error.metadata.langKey || 'account.create.error'),
         error: error.message || 'An error occurred during registration',

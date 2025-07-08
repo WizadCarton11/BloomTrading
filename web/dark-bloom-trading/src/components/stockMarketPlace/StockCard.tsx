@@ -102,7 +102,7 @@ export function StockCard({ stock , isCompareMode = false, isSelected = false, o
         whitespace-nowrap min-w-[110px] h-6 flex items-center justify-center text-center
         transition-all duration-300"
       >
-        {stock.sector.toUpperCase() || "Loading..."}
+        {stock.sector.length > 10? stock.sector?.slice(0, 10) +"..." : stock.sector || "Loading..."}
       </Badge>
 
     </div>

@@ -2,8 +2,8 @@ import { PrismaClient, Account, Transaction, TransactionType } from '@prisma/cli
 import { FastifyRequest } from 'fastify';
 export interface CreateAccountData {
   userId: string;
-  accountType: string;
-  currency: string;
+  accountType?: string;
+  currency?: string;
 }
 
 export interface CreateTransactionData {

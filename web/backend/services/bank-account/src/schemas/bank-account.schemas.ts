@@ -106,7 +106,11 @@ export const authHeaderSchema = z
 export const buyStockSchema = z.object({
   transactionId: uuidSchema,
   stockSymbol: stringSchema,
-  amount: numberSchema,
+  // amount is decimal, can be 0
+  amount: z
+    .number()
+    .min(0, { message: 'Amount must be a non-negative number' })
+    .default(0),
   numberOfShares: numberSchema.optional().default(1),
   // average price is decimal, can be 0
   averagePrice: z

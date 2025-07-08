@@ -252,11 +252,13 @@ export default function StockMarketplace() {
   
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-950">
+      <div className="min-h-screen flex w-full bg-gray-950 ">
         <AppSidebar />
 
-        <div className="min-h-screen bg-background text-foreground flex-1">
-          <div className="container mx-auto px-4 py-8">
+        <div className="h-screen bg-background text-foreground flex-1 overflow-y-auto scrollbar">
+
+
+          <div className="container mx-auto px-4 py-8 ">
             {/* Header */}
             <div className="mb-8">
               <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">

@@ -6,6 +6,7 @@ service BankService {
   rpc GetAccountBalance (GetAccountBalanceRequest) returns (GetAccountBalanceResponse);
   rpc CreateTransaction (CreateTransactionRequest) returns (CreateTransactionResponse);
   rpc LockFund (LockFundRequest) returns (LockFundResponse);
+  rpc CreateBankAccount (CreateBankAccountRequest) returns (CreateBankAccountResponse);
 }
 
 message GetAccountBalanceRequest {
@@ -44,4 +45,14 @@ message LockFundResponse {
   string transaction_id = 1;
   string new_balance = 2;
   string error = 3;
+}
+
+message CreateBankAccountRequest {
+  string user_id = 1;
+}
+
+message CreateBankAccountResponse {
+  string user_id = 1;
+  string account_id = 2;
+  string error = 3    ;
 }

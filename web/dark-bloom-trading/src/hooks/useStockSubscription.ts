@@ -30,7 +30,7 @@ export const useStockSubscriptionWithMap = (symbols: string[]) => {
   const context = StockSocketManager();
   if (!context) throw new Error('Must use inside StockSocketProvider');
   if (!symbols || symbols.length === 0) {
-    return [];
+    return new Map<string, any>();
   }
   const { getStockData, subscribeSymbols, unsubscribeSymbols } = context;
   
@@ -43,7 +43,7 @@ export const useStockSubscriptionWithMap = (symbols: string[]) => {
   }, [symbols.join(',')]);
   const stockMap= new Map<string, any>();
   symbols.forEach(symbol => {
-    stockMap.set(symbol, {
+    stockMap.set(symbol.toLowerCase(), {
       symbol,
       data: getStockData(symbol),
     });

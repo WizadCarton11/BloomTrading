@@ -18,6 +18,9 @@ model portfolio {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  // make pair of userId and symbol unique
+  @@unique([userId, symbol], map: "uq_portfolio_user_symbol")
+
   @@index([userId, symbol], map: "ix_portfolio_user_symbol")
 }
 

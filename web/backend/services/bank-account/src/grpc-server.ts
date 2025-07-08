@@ -14,6 +14,14 @@ interface LockFundResponse extends grpc.sendUnaryData<any> {
   message: string;
   data?: any;
 }
+interface CreateBankAccountRequest extends grpc.ServerUnaryCall<{ user_id: string; }, any> {
+  request: { user_id: string; };
+}
+interface CreateBankAccountResponse {
+  user_id: string;
+  error?: string;
+  account_id: string; // Optional field for account ID
+}
 //#endregion
 const PROTO_PATH = path.join(__dirname, '../proto/bank.proto');
 
@@ -44,7 +52,26 @@ server.addService(BankProto.bank.BankService.service, {
           error: error.message || 'An error occurred while locking funds',
         });
       }
-    }
+    },
+
+
+  CreateBankAccount: async (call: CreateBankAccountRequest, callback: grpc.sendUnaryData<CreateBankAccountResponse>) => {
+    try {
+      const { user_id } = call.request;
+      console.log('Creating bank account for user:', user_id);
+      const result = await AccountService.createAccount({ userId:user_id, accountType: 'savings', currency: 'USD' });
+      console.log('Bank account created:', result);
+      callback(null, { user_id: result.id, account_id: result.accountNumber });
+    } catch (error: any) {
+      console.error('Error in CreateBankAccount:', error);
+      callback(null, {
+        user_id: '',
+        error: error.message || 'An error occurred while creating bank account',
+        account_id: ''
+      });
+    
+  }
+}
 });
 
 export function start(): void {

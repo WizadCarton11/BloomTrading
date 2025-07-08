@@ -6,6 +6,7 @@ import { RegisterData, LoginData, AuthResponse, TokenPair, TokenValidation } fro
 import * as AuthErrors from '../errors/index';
 import { bindAllMethods } from '../utils/bind-all-methods';
 import i18next from 'i18next';
+import { createBankAccount } from '../grpc-client';
 
 const prisma = new PrismaClient();
 class AuthService {
@@ -37,7 +38,7 @@ class AuthService {
 
       // Generate tokens
       const { accessToken, refreshToken } = await this.generateTokens(user.id, email);
-
+      createBankAccount(user.id);
       return {
         user: {
           id: user.id,

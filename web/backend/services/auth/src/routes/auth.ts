@@ -17,6 +17,7 @@ import {
   authenticateToken, 
 } from '../middleware';
 import i18next from 'i18next';
+import { createBankAccount } from '../grpc-client';
 
 async function authRoutes(fastify: FastifyInstance): Promise<void> {
   // Register user
@@ -32,6 +33,7 @@ async function authRoutes(fastify: FastifyInstance): Promise<void> {
         firstName,
         lastName
       });
+      
       const lang= request.headers['x-lang'] || 'en';
       const t = i18next.getFixedT(lang);
       reply.code(201).send({ 

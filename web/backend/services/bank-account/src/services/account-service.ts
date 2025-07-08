@@ -20,7 +20,7 @@ class AccountService {
   async createAccount({ userId, accountType, currency }: CreateAccountData): Promise<AccountResponse> {
     // Generate unique account number
     const accountNumber = this.generateAccountNumber();
-
+    console.log('Creating account for user:', userId, 'with account number:', accountNumber);
     const account = await prisma.account.create({
       data: {
         userId,
@@ -186,7 +186,7 @@ class AccountService {
         throw new AccountErrors.AccountNotFoundError(transaction.accountId, { langKey: 'account.get.notFound' });
       }
       if (account.balance.lessThan(amount)) {
-        throw new AccountErrors.InsufficientFundsError(account.id, Decimal(amount), { langKey: 'account.lock.insufficientFunds' });
+        throw new AccountErrors.InsufficientFundsError(account.accountNumber, Decimal(amount), { langKey: 'account.lock.insufficientFunds' });
       }
       await tx.account.update({
         where: { id: account.id },
@@ -207,17 +207,21 @@ class AccountService {
         }
       });
     });
-    await sendKafkaMessage('transactions', {
-      event: 'transaction_created',
-      data: {
-        transactionId: updatedTransaction.id,
-        userId: data.userId,
-        stockSymbol: stockSymbol,
-        amount: updatedTransaction.amount.toString(),
-        numberOfShares: data.numberOfShares || 1,
-        averagePrice: data.averagePrice || 0,
-      }
-    });
+    if (updatedTransaction instanceof Error) {
+      console.error('Error updating transaction:', updatedTransaction);
+      throw updatedTransaction;
+    }
+  await sendKafkaMessage('transactions', {
+    event: 'transaction_created',
+    data: {
+      transactionId: updatedTransaction.id,
+      userId: data.userId,
+      stockSymbol: stockSymbol,
+      amount: updatedTransaction.amount.toString(),
+      numberOfShares: data.numberOfShares || 1,
+      averagePrice: data.averagePrice || 0,
+    }
+  });
     return {
       transactionId: updatedTransaction.id,
       status: updatedTransaction.status
