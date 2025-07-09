@@ -193,6 +193,78 @@ async function accountRoutes(fastify: FastifyInstance): Promise<void> {
     }
   });
 
+  // sell stock
+  fastify.post<{ Body: BuyStockRequest}>('/sell_stock', {
+    preHandler: [authenticate, validateBody(buyStockSchema)]
+  }, async (request: AuthenticatedRequest, reply: FastifyReply) => {
+    try {
+      const lang= request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);
+      if (!request.userId) {
+        return reply.code(401).send({ error: 'User ID not found' });
+      }
+      console.log(request.body);
+      const { transactionId, stockSymbol, amount, numberOfShares , averagePrice} = request.body as BuyStockRequest;
+
+      if (!transactionId || !stockSymbol || !amount) {
+        throw new AccountErrors.ValidationError('Transaction ID, stock symbol and amount are required');
+      }
+
+      const transaction = await accountService.sellStock({
+        userId: request.userId,
+        transactionId,
+        stockSymbol,
+        amount,
+        numberOfShares: numberOfShares || 1,
+        averagePrice: averagePrice || 0
+      });
+
+      reply.send({
+        message: t('account.stock.sell.success'),
+        accessToken: request.accessToken,
+        data: transaction
+      });
+    } catch (error: any) {
+      console.error(error);
+      const lang= request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);
+      console.error('Error in sell_stock:', error);
+      throw error;
+    }
+  });
+// inlcude page and limit in the query params
+  fastify.get<{ Params: AccountParams, Querystring: TransactionQuery }>('/:accountId/transactions', {
+    preHandler: authenticate
+  }, async (request: AuthenticatedRequest & { query: TransactionQuery }, reply: FastifyReply) => {
+    try {
+      const lang= request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);
+      if (!request.userId) {
+        return reply.code(401).send({ error: 'User ID not found' });
+      }
+      const { accountId } = request.params as AccountParams;
+
+      const key = `get_account:${accountId}:${request.query.page}:${request.query.limit}`;
+      const result = await cacheWithRevalidation({
+        key,
+        ttl: 600,
+        fetchFn: () => accountService.getAccountTransactions(accountId, request.query.page || 1, request.query.limit || 10)
+      });
+      // const data= await accountService.getAccountTransactions(accountId, request.query.page || 1, request.query.limit || 10);
+      // console.log(data)
+      reply.send({
+        message: t('account.get.success'),
+        accessToken: request.accessToken,
+        data: result.data,
+        fromCache: result.fromCache
+      });
+    } catch (error: any) {
+      console.error(error);
+      const lang= request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);
+      throw error;
+    }
+  });
   
 }
 

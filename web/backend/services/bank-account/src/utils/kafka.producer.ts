@@ -18,7 +18,7 @@ export const sendKafkaMessage = async (topic: string, message: object) => {
   if (!producer) {
     throw new Error('Producer not initialized. Call createKafkaProducer() first.');
   }
-
+  console.log(`📤 Sending message to topic ${topic}:`, message);
   await producer.send({
     topic,
     messages: [{ value: JSON.stringify(message) }],

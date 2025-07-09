@@ -55,13 +55,7 @@ async function stockRoutes(fastify: FastifyInstance): Promise<void> {
       console.error(error);
       const lang= request.headers['x-lang'] || 'en';
       const t = i18next.getFixedT(lang);
-      return {
-        message: t(error.metadata.langKey || 'account.create.error'),
-        error: error.message || 'An error occurred during registration',
-        statusCode: error.statusCode || 500,
-        code: error.code || 'INTERNAL_SERVER_ERROR',
-        details: error.details || null
-      } as any;
+      throw error
     }
   });
   
@@ -92,13 +86,7 @@ async function stockRoutes(fastify: FastifyInstance): Promise<void> {
       const lang= request.headers['x-lang'] || 'en';
       const t = i18next.getFixedT(lang);
 
-      return {
-        message: t(error.metadata.langKey || 'account.create.error'),
-        error: error.message || 'An error occurred during registration',
-        statusCode: error.statusCode || 500,
-        code: error.code || 'INTERNAL_SERVER_ERROR',
-        details: error.details || null
-      } as any;
+      throw error;
     }
   });
 
@@ -141,13 +129,7 @@ async function stockRoutes(fastify: FastifyInstance): Promise<void> {
       const lang= request.headers['x-lang'] || 'en';
       const t = i18next.getFixedT(lang);
 
-      return {
-        message: t(error.metadata.langKey || 'account.create.error'),
-        error: error.message || 'An error occurred during registration',
-        statusCode: error.statusCode || 500,
-        code: error.code || 'INTERNAL_SERVER_ERROR',
-        details: error.details || null
-      } as any;
+      throw error;
     }
   });
   // get list of stocks with details
@@ -177,13 +159,7 @@ async function stockRoutes(fastify: FastifyInstance): Promise<void> {
       console.error(error);
       const lang= request.headers['x-lang'] || 'en';
       const t = i18next.getFixedT(lang);      
-      return {
-        message: t(error.metadata.langKey || 'account.create.error'),
-        error: error.message || 'An error occurred during registration',
-        statusCode: error.statusCode || 500,
-        code: error.code || 'INTERNAL_SERVER_ERROR',
-        details: error.details || null
-      } as any;
+      throw error
     }
   });
 
@@ -220,13 +196,7 @@ async function stockRoutes(fastify: FastifyInstance): Promise<void> {
       const lang= request.headers['x-lang'] || 'en';
       const t = i18next.getFixedT(lang);
 
-      return {
-        message: t(error.metadata.langKey || 'account.create.error'),
-        error: error.message || 'An error occurred during registration',
-        statusCode: error.statusCode || 500,
-        code: error.code || 'INTERNAL_SERVER_ERROR',
-        details: error.details || null
-      } as any;
+      throw error
     }
   });
 
@@ -257,13 +227,40 @@ async function stockRoutes(fastify: FastifyInstance): Promise<void> {
       console.error(error);
       const lang= request.headers['x-lang'] || 'en';
       const t = i18next.getFixedT(lang);      
-      return {
-        message: t(error.metadata.langKey || 'account.create.error'),
-        error: error.message || 'An error occurred during registration',
-        statusCode: error.statusCode || 500,
-        code: error.code || 'INTERNAL_SERVER_ERROR',
-        details: error.details || null
-      } as any;
+      throw error
+    }
+  });
+
+  // get stock by userId and symbol
+  fastify.get<{ Params: { symbol: string } }>('/get_stock_by_user/:symbol', {
+    preHandler: [authenticate],
+  }, async (request: AuthenticatedRequest & Partial<any>, reply: FastifyReply) => {
+    try {
+      const lang = request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);
+      const { symbol } = request.params as { symbol: string };
+      const userId = request.userId;
+      if (!userId) {
+        throw new StockErrors.ValidationError('User ID is required');
+      }
+      const cacheKey = `stock:${userId}:${symbol}`;
+      // const result = await cacheWithRevalidation({
+      //   key: cacheKey,
+      //   ttl: 10000,
+      //   fetchFn: async () => {
+      //     return StockService.getStockByUserIdAndSymbol(userId, symbol);
+      //   }
+      // });
+      const data = await StockService.getStockByUserIdAndSymbol(userId, symbol);
+      return reply.send({ message: t('stock.get.success'),
+         data: data, accessToken: request.accessToken,
+        // fromCache: result.fromCache
+        });
+    } catch (error: any) {
+      console.error(error);
+      const lang= request.headers['x-lang'] || 'en';
+      const t = i18next.getFixedT(lang);      
+      throw error
     }
   });
 

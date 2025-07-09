@@ -1,6 +1,6 @@
 import { EachMessagePayload, Kafka } from 'kafkajs';
 import { Server as SocketIOServer } from 'socket.io';
-import { completeTransaction } from '../services/account-service';
+import { completeBuyTransaction } from '../services/account-service';
 interface StockMessage {
   symbol: string;
   data: any;
@@ -39,7 +39,7 @@ export const createKafkaConsumer = async () => {
           const { event, data } = parsed;
           if (event === 'transaction_completed') {
             const { userId, transactionId } = data;
-            completeTransaction(transactionId)
+            completeBuyTransaction(transactionId)
             // Here you can handle the transaction completion logic
             console.log(`💰 Transaction completed for user ${userId} with ID ${transactionId}`);
           } else {

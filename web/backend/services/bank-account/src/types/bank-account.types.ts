@@ -20,9 +20,11 @@ export interface TransferBody {
 
 export interface AccountParams {
   accountId: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface TransactionQuery {
-  page?: string;
-  limit?: string;
+  page?: number;
+  limit?: number;
 }

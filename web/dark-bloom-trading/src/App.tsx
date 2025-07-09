@@ -19,6 +19,7 @@ const MarketPlace = React.lazy(() => import("./pages/StockMarketplace"));
 const SingleStockPage = React.lazy(() => import("./pages/SingleStockPage"));
 const CompareStocks = React.lazy(() => import("./pages/CompareStock"));
 const Portfolio = React.lazy(() => import("./pages/PortfolioPage"));
+const AccountPage = React.lazy(() => import("./pages/AccountsPage"));
 const App = () => {
   useEffect(() => {
       // Add custom scrollbar styles
@@ -71,6 +72,7 @@ const App = () => {
             <Route path="/stock/:stockSymbol" element={<SingleStockPage />} />
             <Route path="/compare/:symbols" element={<CompareStocks />} />
             <Route path="/portfolio" element={<Portfolio />} />
+            <Route path="/account" element={<AccountPage />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

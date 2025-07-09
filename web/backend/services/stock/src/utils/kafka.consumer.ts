@@ -1,7 +1,7 @@
 import { EachMessagePayload, Kafka } from 'kafkajs';
 import { Server as SocketIOServer } from 'socket.io';
 import { redisClient } from './cache_with_revalidation';
-import { addToPortfolio } from '../services/stock.service';
+import { addToPortfolio, removeFromPortfolio } from '../services/stock.service';
 interface StockMessage {
   symbol: string;
   data: any;
@@ -28,10 +28,11 @@ export const createKafkaConsumer = async (io: SocketIOServer) => {
   });
 
   const consumer = kafka.consumer({ groupId: 'stock-group' });
-
+  const transationconsumer = kafka.consumer({ groupId: 'stock-transaction-group' });
   await consumer.connect();
+  await transationconsumer.connect();
   await consumer.subscribe({ topic: 'live_stock_data', fromBeginning: false });
-  await consumer.subscribe({ topic: 'transactions', fromBeginning: false });
+  await transationconsumer.subscribe({ topic: 'transactions', fromBeginning: false });
   
     await consumer.run({
     eachMessage: async ({ topic, message }: EachMessagePayload) => {
@@ -52,15 +53,34 @@ export const createKafkaConsumer = async (io: SocketIOServer) => {
           // console.log(`📈 Live stock update sent for ${symbol}`);
         } 
         
+        else {
+          console.warn(`⚠️ Unhandled topic: ${topic}`);
+        }
+      } catch (err) {
+        console.error('❌ Failed to process message:', err);
+      }
+    },
+  });
+  await transationconsumer.run({
+    eachMessage: async ({ topic, message }: EachMessagePayload) => {
+      try {
+        const value = message.value?.toString();
+        if (!value) return;
         else if (topic === 'transactions') {
           const parsed: TransactionMessage = JSON.parse(value);
           const { event, data } = parsed;
 
-          if (event === 'transaction_created') {
+          if (event === 'buy_stock') {
             const { userId, stockSymbol, amount, numberOfShares, averagePrice, transactionId } = data;
             await addToPortfolio(userId, transactionId, stockSymbol, numberOfShares, parseFloat(amount), averagePrice);
             console.log(`💰 Transaction created for user ${userId} with stock ${stockSymbol}`);
-          } else {
+          } 
+          else if (event === 'sold_stock') {
+            const { userId, stockSymbol, amount, numberOfShares, averagePrice, transactionId } = data;
+            await removeFromPortfolio(userId, transactionId, stockSymbol, numberOfShares, parseFloat(amount), averagePrice);
+            console.log(`💰 Transaction created for user ${userId} with stock ${stockSymbol}`);
+          }
+          else {
             console.warn(`⚠️ Unhandled transaction event: ${event}`);
           }
         } 

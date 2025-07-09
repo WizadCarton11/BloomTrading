@@ -158,3 +158,15 @@ export class InvalidSymbolsError extends CustomError {
     super(message, 422, 'INVALID_SYMBOLS', metadata);
   }
 }
+
+export class PortfolioItemNotFoundError extends CustomError {
+  constructor(message = 'Portfolio item not found', metadata: any = {}) {
+    super(message, 404, 'PORTFOLIO_ITEM_NOT_FOUND', metadata);
+  }
+}
+
+export class InsufficientQuantityError extends CustomError {
+  constructor(message = 'Insufficient quantity for the operation', metadata: any = {}) {
+    super(message, 400, 'INSUFFICIENT_QUANTITY', metadata);
+  }
+}

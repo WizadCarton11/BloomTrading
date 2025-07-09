@@ -1,5 +1,5 @@
 
-import { Home, TrendingUp, Eye, Briefcase, BookOpen, Bot, Newspaper, Brain } from "lucide-react";
+import { Home, TrendingUp, User, Briefcase, BookOpen, Bot, Newspaper, Brain } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -28,9 +28,9 @@ const mainItems = [
     icon: TrendingUp,
   },
   {
-    title: "Watchlist",
-    url: "/watchlist",
-    icon: Eye,
+    title: "Account",
+    url: "/account",
+    icon: User,
   },
   {
     title: "Portfolio",

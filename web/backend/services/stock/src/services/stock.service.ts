@@ -158,60 +158,120 @@ class StockService {
         }));
     }
 
-    async addToPortfolio(userId: string, transationId: string, symbol: string, quantity: number, amount: number, averagePrice: number): Promise<void> {
-        const alreadyExists = await prisma.portfolio.findFirst({
-            where: {
-                userId: userId,
-                symbol: symbol  
-            }
+    async addToPortfolio(
+        userId: string,
+        transactionId: string,
+        symbol: string,
+        quantity: number,
+        amount: number,
+        averagePrice: number
+    ): Promise<void> {
+        if (quantity <= 0 || amount <= 0) {
+            throw new Error("Quantity and amount must be positive to add to portfolio");
+        }
+
+        const existing = await prisma.portfolio.findFirst({
+            where: { userId, symbol }
         });
-        if (alreadyExists) {
-            // Update existing portfolio entry
+
+        if (existing) {
+            const newQuantity = existing.quantity + quantity;
+            const newTotalValue = existing.totalValue + amount;
+
             await prisma.portfolio.update({
-                where: {
-                    id: alreadyExists.id,
-                    userId: userId,
-                    symbol: symbol
-                },
+                where: { id: existing.id },
                 data: {
-                    quantity: alreadyExists.quantity + quantity,
-                    totalValue: alreadyExists.totalValue + amount,
-                    averageCost: ((alreadyExists.totalValue + amount) / (alreadyExists.quantity + quantity)),
+                    quantity: newQuantity,
+                    totalValue: newTotalValue,
+                    averageCost: newQuantity > 0 ? newTotalValue / newQuantity : 0,
                     updatedAt: new Date(),
-                    transactionId: transationId
+                    transactionId
                 }
             });
-            await sendKafkaMessage('transactions_success', {
-                event: 'transaction_completed',
+        } else {
+            await prisma.portfolio.create({
                 data: {
-                    transactionId: transationId,
-                    userId: userId,
+                    userId,
+                    symbol,
+                    quantity,
+                    totalValue: amount,
+                    averageCost: averagePrice,
+                    transactionId,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
                 }
-            })    
-            console.log(`💰 Transaction completed for user ${userId} with stock ${symbol}`);
-            return;
+            });
         }
-        
-        await prisma.portfolio.create({
-            data: {
-                userId,
-                symbol,
-                quantity,
-                totalValue: amount,
-                transactionId: transationId,
-                averageCost: averagePrice,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            }
-        });
+
         await sendKafkaMessage('transactions_success', {
             event: 'transaction_completed',
-            data: {
-                transactionId: transationId,
-                userId: userId,
-            }
-        })
+            data: { transactionId, userId }
+        });
+
         console.log(`💰 Transaction completed for user ${userId} with stock ${symbol}`);
+    }
+
+    async removeFromPortfolio(
+        userId: string,
+        transactionId: string,
+        symbol: string,
+        quantity: number,
+        amount: number
+    ): Promise<void> {
+        if (quantity <= 0 || amount <= 0) {
+            throw new Error("Quantity and amount must be positive to remove from portfolio");
+        }
+
+        const portfolioItem = await prisma.portfolio.findFirst({
+            where: { userId, symbol }
+        });
+
+        if (!portfolioItem) {
+            throw new StockErrors.PortfolioItemNotFoundError(`Portfolio item with symbol ${symbol} not found for user ${userId}`);
+        }
+
+        if (portfolioItem.quantity < quantity) {
+            throw new StockErrors.InsufficientQuantityError(`Insufficient quantity in portfolio for symbol ${symbol}`);
+        }
+
+        const remainingQuantity = portfolioItem.quantity - quantity;
+
+        if (remainingQuantity === 0) {
+            await prisma.portfolio.delete({
+                where: { id: portfolioItem.id }
+            });
+        } else {
+            const remainingTotalValue = portfolioItem.totalValue - amount;
+
+            await prisma.portfolio.update({
+                where: { id: portfolioItem.id },
+                data: {
+                    quantity: remainingQuantity,
+                    totalValue: remainingTotalValue,
+                    averageCost: portfolioItem.averageCost, // do not change on sell
+                    updatedAt: new Date(),
+                    transactionId
+                }
+            });
+        }
+
+        await sendKafkaMessage('transactions_success', {
+            event: 'transaction_completed',
+            data: { transactionId, userId }
+        });
+
+        console.log(`📉 Removed ${quantity} of ${symbol} from user ${userId}'s portfolio`);
+    }
+
+    async getStockByUserIdAndSymbol(userId: string, symbol: string): Promise<any> {
+        const portfolioItem = await prisma.portfolio.findFirst({
+            where: {
+                userId: userId,
+                symbol: symbol
+            }
+        });
+
+        return portfolioItem;
     }
 
     async getPortfolio(userId: string) {
@@ -235,7 +295,9 @@ export const { getStocks,
     getStockBySymbol,
     getStocksDetails,
     addToPortfolio,
-    getPortfolio
+    getPortfolio,
+    removeFromPortfolio,
+    getStockByUserIdAndSymbol
 } = bindAllMethods(stockServiceInstance);
 // export const createAccount = accountServiceInstance.createAccount.bind(accountServiceInstance);
 // export const getUserAccounts = accountServiceInstance.getUserAccounts.bind(accountServiceInstance);

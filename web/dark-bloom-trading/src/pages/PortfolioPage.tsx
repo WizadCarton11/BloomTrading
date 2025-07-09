@@ -118,7 +118,7 @@ const Portfolio = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gray-950 ">
         <AppSidebar />
-        <div className="min-h-screen w-full bg-slate-900 text-slate-100 p-4 md:p-6 lg:p-8">
+        <div className="min-h-screen w-full bg-gray-950 text-slate-100 p-4 md:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto space-y-6">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
