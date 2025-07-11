@@ -1,0 +1,28 @@
+generator client {
+  provider             = "prisma-client-py"
+  recursive_type_depth = "5"
+  interface            = "asyncio"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model conversation {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  title     String?
+  userId    String
+  isActive  Boolean   @default(false)
+  messages  basic_stock_info_vector_search_chat_history[]
+}
+model basic_stock_info_vector_search_chat_history {
+  id         Int     @id @default(autoincrement())
+  session_id String?
+  message    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt @default(now())
+  conversation    conversation? @relation(fields: [session_id], references: [id])
+}

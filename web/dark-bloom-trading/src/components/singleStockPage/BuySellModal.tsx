@@ -43,8 +43,9 @@ export default function BuySellModal({ symbol }: BuySellModalProps) {
             {},
             "getCurrentQuantity"
           )
-          setCurrentQuantity(quantityResponse.data.data.quantity);  
-          console.log("Current Quantity:", quantityResponse.data.data.quantity);
+          // console.log("Current Quantity Response:", quantityResponse.data.data);
+          setCurrentQuantity(quantityResponse?.data?.data?.quantity || 0);  
+          // console.log("Current Quantity:", quantityResponse.data.data.quantity);
         } catch (error) {
           console.error("Error fetching transaction ID:", error);
           setTransactionId("error");

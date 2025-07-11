@@ -385,6 +385,10 @@ export const BankService = new ApiService({
   baseURL: import.meta.env.VITE_API_BANK_BACKEND_URL,
   timeout: 15000,
 });
+export const AIChatService = new ApiService({
+  baseURL: import.meta.env.VITE_API_AI_CHAT_BACKEND_URL,
+  timeout: 15000,
+});
 // Export the class for creating additional instances if needed
 export { ApiService };
 

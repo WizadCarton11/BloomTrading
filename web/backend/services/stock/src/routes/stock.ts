@@ -264,6 +264,7 @@ async function stockRoutes(fastify: FastifyInstance): Promise<void> {
     }
   });
 
+  
     
 }
 

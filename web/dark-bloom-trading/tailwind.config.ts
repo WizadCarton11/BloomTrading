@@ -28,6 +28,22 @@ export default {
 			// 		'50%': { backgroundPosition: '100% 50%' },
 			// 	},
 			// },
+			backgroundColor: {
+  // User message background (dark bluish-gray bubble)
+  'message-user': 'hsl(222, 16%, 24%)',       // Approx: #2f3140
+
+  // AI message background (slightly darker gray)
+  'message-ai': 'hsl(221, 51.20%, 49.80%)',         // Approx: #272934
+
+  // Chat main background
+  'chat-background': 'hsl(225, 15%, 10%)',    // Approx: #15171e
+
+  // Chat input bar (bottom input field)
+  'chat-input': 'hsl(225, 15%, 12%)',         // Approx: #1b1d25
+
+  // Sidebar background (where chat list is shown)
+  'chat-sidebar': 'hsl(225, 15%, 8%)',        // Approx: #12141a
+},
 			backgroundSize: {
 				'300%': '300%',
 			},

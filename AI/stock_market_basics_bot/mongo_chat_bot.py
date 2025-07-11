@@ -1,65 +1,30 @@
-from langchain_groq import ChatGroq
-import os
-from langchain_core.output_parsers import StrOutputParser
 
-from mongodb_atlas import MongoDBAtlas, MongoDBAtlasDocumentManager
-
-from langchain_core.tools import tool
-from langchain_core.output_parsers import StrOutputParser
-from langchain_community.chat_message_histories import SQLChatMessageHistory
-from langchain_core.runnables.utils import ConfigurableFieldSpec
-from langchain_core.prompts import (
-    ChatPromptTemplate,
-    MessagesPlaceholder,
-)
-from langchain_core.runnables.history import RunnableWithMessageHistory
-from langchain_core.output_parsers import StrOutputParser
-
+from typing import List
 from langchain.chains import SequentialChain
-from mongodb_atlas import MongoDBAtlas, MongoDBAtlasDocumentManager
 from langchain_core.runnables import RunnableLambda, RunnableConfig
-from langchain_core.runnables import RunnableWithMessageHistory
-from langchain_community.chat_message_histories import SQLChatMessageHistory
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from langchain.agents import AgentType, initialize_agent
 from langchain_groq import ChatGroq
-import os
+
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.tools import tool
 from langchain_community.chat_message_histories import SQLChatMessageHistory
 from langchain_core.runnables.utils import ConfigurableFieldSpec
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
-from langchain_core.runnables import RunnableLambda
-from langchain_core.messages import SystemMessage
 from langchain.agents import AgentType, initialize_agent
-
-from mongodb_atlas import MongoDBAtlas, MongoDBAtlasDocumentManager
-
-
-from langchain_groq import ChatGroq
 import os
+from pydantic import BaseModel, Field
 import redis
 import json
 import hashlib
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.tools import tool
-from langchain_community.chat_message_histories import SQLChatMessageHistory
-from langchain_core.runnables.utils import ConfigurableFieldSpec
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables.history import RunnableWithMessageHistory
-from langchain_core.runnables import RunnableLambda
-from langchain_core.messages import SystemMessage
-from langchain.agents import AgentType, initialize_agent
-
+from langchain_core.messages import BaseMessage
+from langchain_core.chat_history import BaseChatMessageHistory
 from mongodb_atlas import MongoDBAtlas, MongoDBAtlasDocumentManager
-
-
 class RedisCacheManager:
     """Manages Redis caching operations for the QA system."""
     
     def __init__(self, redis_host: str = "localhost", redis_port: int = 6379, 
-                 redis_db: int = 0, cache_ttl: int = 3600):
+                 redis_db: int = 0, cache_ttl: int = 3600, redis_password: str = ""):
         """
         Initialize Redis cache manager.
         
@@ -74,7 +39,8 @@ class RedisCacheManager:
                 host=redis_host, 
                 port=redis_port, 
                 db=redis_db,
-                decode_responses=True
+                decode_responses=True,
+                password=redis_password if redis_password else None
             )
             self.cache_ttl = cache_ttl
             # Test connection
@@ -194,12 +160,25 @@ class PromptManager:
         """Get the summary prompt template."""
         return ChatPromptTemplate.from_messages([
             SystemMessage(
-                content="You are a helpful assistant that structures, formats and add details to answers based on the provided base knowledge and user query."
+                content="You are a helpful assistant that structures, formats and shortens to answers based on the provided base knowledge and user query. Try to be as short as possible while keeping them in points"
             ),
+            ("human", "{text}"),
+        ])
+    @staticmethod
+    def get_title_prompt():
+        """Get the title prompt template."""
+        return ChatPromptTemplate.from_messages([
+            SystemMessage(
+                content="You are a helpful assistant that generates a title from the user query and the answer provided by the LLM. The title should be short and descriptive. It must not be the same as the query.",
+            ),
+            ("human", "{query}"),
             ("human", "{text}"),
         ])
 
 
+class ConversationTitle(BaseModel):
+    """Model for conversation title."""
+    title: str= Field(description="The title of the conversation based on the query and answer.")
 class LLMChainManager:
     """Manages LLM chains and their configurations."""
     
@@ -214,6 +193,7 @@ class LLMChainManager:
         self.no_prompt_llm = self.llm | StrOutputParser()
         self.base_llm_chain = self.prompt_manager.get_base_prompt() | self.llm | StrOutputParser()
         self.history_llm_chain = self.prompt_manager.get_history_prompt() | self.llm | StrOutputParser()
+        self.title_llm_chain = self.prompt_manager.get_title_prompt() | self.llm.with_structured_output(ConversationTitle) 
         self.summary_llm_chain = self.prompt_manager.get_summary_prompt() | self.no_prompt_llm
     
     def get_base_chain(self):
@@ -227,20 +207,92 @@ class LLMChainManager:
     
     def get_no_prompt_chain(self):
         return self.no_prompt_llm
+    
+    def get_title_chain(self):
+        return self.title_llm_chain
+
+
+class HumanOnlyMessageHistory(BaseChatMessageHistory):
+    """Custom chat message history that only returns human messages when retrieved."""
+    
+    def __init__(self, table_name: str, session_id: str, connection: str, message_limit: int = 5):
+        """
+        Initialize the custom message history.
+        
+        Args:
+            table_name: Database table name
+            session_id: Session identifier
+            connection: Database connection string
+            message_limit: Maximum number of human messages to return
+        """
+        self.full_history = SQLChatMessageHistory(
+            table_name=table_name,
+            session_id=session_id,
+            connection=connection
+        )
+        self.message_limit = message_limit
+    
+    @property
+    def messages(self) -> List[BaseMessage]:
+        """Return only human messages, limited by message_limit."""
+        all_messages = self.full_history.messages
+        
+        # Filter only human messages
+        human_messages = [msg for msg in all_messages
+                        #   if isinstance(msg, HumanMessage)
+                          ]
+        
+        # Return last N human messages
+        return human_messages[-self.message_limit:] if len(human_messages) > self.message_limit else human_messages
+    
+    def add_message(self, message: BaseMessage) -> None:
+        """Add message to the full history (both human and AI messages are saved)."""
+        print(f"Adding message to history: {message.content}")
+        self.full_history.add_message(message)
+    
+    def add_messages(self, messages: List[BaseMessage]) -> None:
+        """Add multiple messages to the full history."""
+        print(f"Adding {len(messages)} messages to history")
+        return 
+        self.full_history.add_messages(messages)
+    
+    def clear(self) -> None:
+        """Clear all messages from the history."""
+        self.full_history.clear()
+    
+    def get_full_history(self) -> List[BaseMessage]:
+        """Get complete history including both human and AI messages."""
+        return self.full_history.messages
+    
+    def get_ai_messages(self) -> List[BaseMessage]:
+        """Get only AI messages."""
+        all_messages = self.full_history.messages
+        return [msg for msg in all_messages if isinstance(msg, AIMessage)]
+    
+    def get_conversation_pairs(self) -> List[tuple]:
+        """Get conversation as (human_message, ai_message) pairs."""
+        all_messages = self.full_history.messages
+        pairs = []
+        
+        for i in range(len(all_messages) - 1):
+            if isinstance(all_messages[i], HumanMessage) and isinstance(all_messages[i + 1], AIMessage):
+                pairs.append((all_messages[i], all_messages[i + 1]))
+        
+        return pairs
 
 
 class ChatHistoryManager:
-    """Manages chat history operations."""
+    """Enhanced chat history manager with human-only history retrieval."""
     
     def __init__(self, history_limit: int = 2):
         self.history_limit = history_limit
         self.table_name = "basic_stock_info_vector_search_chat_history"
-        self.postgres_uri = os.getenv("POSTGRES_URI")
+        self.postgres_uri = os.getenv("DATABASE_URL")
     
     def get_limited_chat_history(self, user_id: str, conversation_id: str):
-        """Get chat history with limited number of messages."""
+        """Get chat history with limited number of human messages only."""
         try:
-            return LimitedSQLChatMessageHistory(
+            return HumanOnlyMessageHistory(
                 table_name=self.table_name,
                 session_id=conversation_id,
                 connection=self.postgres_uri,
@@ -249,36 +301,49 @@ class ChatHistoryManager:
         except Exception as e:  
             print(f"Error retrieving chat history: {e}")
             return None
-
-    def get_alternative_limited_history(self, user_id: str, conversation_id: str):
-        """Alternative approach: manually limit messages after retrieval."""
+    
+    def get_full_chat_history(self, user_id: str, conversation_id: str):
+        """Get complete chat history including both human and AI messages."""
         try:
-            full_history = SQLChatMessageHistory(
+            return SQLChatMessageHistory(
                 table_name=self.table_name,
                 session_id=conversation_id,
                 connection=self.postgres_uri,
             )
-            
-            # Get all messages and limit them
-            all_messages = full_history.messages
-            limited_messages = all_messages[-self.history_limit:] if len(all_messages) > self.history_limit else all_messages
-            
-            # Create a new history object with limited messages
-            limited_history = SQLChatMessageHistory(
-                table_name=self.table_name,
-                session_id=f"{conversation_id}_limited",
-                connection=self.postgres_uri,
-            )
-            
-            # Clear and add limited messages
-            limited_history.clear()
-            for message in limited_messages:
-                limited_history.add_message(message)
-                
-            return limited_history
-            
         except Exception as e:  
-            print(f"Error retrieving limited chat history: {e}")
+            print(f"Error retrieving full chat history: {e}")
+            return None
+    
+    def save_conversation_turn(self, user_id: str, conversation_id: str, human_message: str, ai_response: str):
+        """Save both human and AI messages to database."""
+        try:
+            history = self.get_full_chat_history(user_id, conversation_id)
+            if history:
+                # Add human message
+                history.add_message(HumanMessage(content=human_message))
+                # Add AI response
+                history.add_message(AIMessage(content=ai_response))
+                print(f"Saved conversation turn for session: {conversation_id}")
+        except Exception as e:
+            print(f"Error saving conversation turn: {e}")
+    
+    def get_conversation_analytics(self, user_id: str, conversation_id: str):
+        """Get analytics about the conversation."""
+        try:
+            history = self.get_limited_chat_history(user_id, conversation_id)
+            if history:
+                full_messages = history.get_full_history()
+                human_messages = [msg for msg in full_messages if isinstance(msg, HumanMessage)]
+                ai_messages = history.get_ai_messages()
+                
+                return {
+                    "total_messages": len(full_messages),
+                    "human_messages": len(human_messages),
+                    "ai_messages": len(ai_messages),
+                    "conversation_pairs": len(history.get_conversation_pairs())
+                }
+        except Exception as e:
+            print(f"Error getting conversation analytics: {e}")
             return None
 
 
@@ -418,7 +483,8 @@ class ChainBuilder:
             "documents": self.vector_manager.similarity_search(refined_query, k=2)
         })
 
-        # Step 3: Format answer
+        
+        # Step 4: Format answer
         formatter = RunnableLambda(lambda inputs: {
             "text": f"Base Knowledge: {self._format_documents(inputs['documents'])}\nUser Query: {inputs['refined_query']}"
         }) | self.llm_manager.get_summary_chain()
@@ -432,7 +498,7 @@ class ChainBuilder:
 
 
 class MongoDBAtlasQA:
-    """Main QA system that orchestrates all components."""
+    """Main QA system with enhanced chat history management."""
     
     def __init__(self, mongo_uri, db_name, collection_name, embedding, index_name, llm, 
                  conversation_id: str = "test_session", user_id: str = "user1", 
@@ -446,7 +512,7 @@ class MongoDBAtlasQA:
             
             # Initialize Redis cache manager
             if enable_cache:
-                self.cache_manager =cache_manager
+                self.cache_manager = cache_manager
             else:
                 self.cache_manager = None
             
@@ -468,7 +534,7 @@ class MongoDBAtlasQA:
     def _setup_managers(self, llm, history_limit):
         """Setup all manager components."""
         self.llm_manager = LLMChainManager(llm)
-        self.history_manager = ChatHistoryManager(history_limit)
+        self.history_manager = ChatHistoryManager(history_limit)  # Uses enhanced ChatHistoryManager
         self.vector_manager = VectorSearchManager(self.atlas)
         self.agent_manager = AgentManager(self.llm_manager.get_no_prompt_chain(), self.vector_manager)
 
@@ -496,7 +562,7 @@ class MongoDBAtlasQA:
             ),
         ]
         
-        self.config = {"configurable": {"user_id": user_id, "conversation_id": conversation_id}}
+        self.config = {"configurable": {"user_id": self.user_id, "conversation_id": self.conversation_id}}
 
     def _setup_chains(self):
         """Setup the chain builder and main chains."""
@@ -513,33 +579,75 @@ class MongoDBAtlasQA:
         else:
             self.full_chain = self.chain_builder.build_full_qa_chain(self.config)
 
-    def run_llm_with_history(self, text: str) -> str:
-        """Run the LLM with chat history."""
+    def run_with_history_save(self, text: str) -> str:
+        """Run the QA system and automatically save the conversation turn."""
         try:
-            history_chain = self.chain_builder.build_history_aware_chain(self.config)
-            return history_chain.invoke({"query": text})
+            # Run the main pipeline
+            result = self.full_chain.invoke({"query": text}, config=self.config)
+            
+            # Save both human query and AI response to database
+            self.history_manager.save_conversation_turn(
+                user_id=self.user_id,
+                conversation_id=self.conversation_id,
+                human_message=text,
+                ai_response=result
+            )
+            
+            return result
         except Exception as e:
-            print(f"Error running LLM with history: {e}")
+            print(f"Error running QA with history save: {e}")
             return "Error processing your request."
-        
-    def run_query_mongo_react(self, text: str):
-        """Query the knowledge base using ReAct agent."""
-        try:
-            agent = self.agent_manager.create_react_agent()
-            return agent.invoke({"input": text})
-        except Exception as e:
-            print(f"Error querying the knowledge base: {e}")
-            return None
     
-    def format_answer(self, text: str, query: str) -> str:
-        """Format and summarize the answer."""
+    def run_with_title_and_history_save(self, text: str) -> dict:
+        """Run the QA system, generate title, and save conversation."""
         try:
-            formatted_text = f"Base Knowledge: {text}\nUser Query: {query}"
-            return self.llm_manager.get_summary_chain().invoke({"text": formatted_text})
+            # Run the main pipeline
+            result = self.full_chain.invoke({"query": text}, config=self.config)
+            
+            # Generate title
+            title = self.llm_manager.get_title_chain().invoke({"query": text, "text": result})
+            
+            # Save conversation turn
+            self.history_manager.save_conversation_turn(
+                user_id=self.user_id,
+                conversation_id=self.conversation_id,
+                human_message=text,
+                ai_response=result
+            )
+            
+            return {"response": result, "title": title.title}
         except Exception as e:
-            print(f"Error formatting the answer: {e}")
-            return "Error summarizing the answer."
-        
+            print(f"Error running with title and history save: {e}")
+            return {"response": "Error processing your request.", "title": "Error"}
+    
+    def get_conversation_analytics(self):
+        """Get analytics about the current conversation."""
+        return self.history_manager.get_conversation_analytics(self.user_id, self.conversation_id)
+    
+    def get_full_conversation_history(self):
+        """Get complete conversation history including AI responses."""
+        try:
+            history = self.history_manager.get_limited_chat_history(self.user_id, self.conversation_id)
+            if history:
+                return history.get_full_history()
+            return []
+        except Exception as e:
+            print(f"Error getting full conversation history: {e}")
+            return []
+    
+    def get_conversation_pairs(self):
+        """Get conversation as (human, ai) message pairs."""
+        try:
+            history = self.history_manager.get_limited_chat_history(self.user_id, self.conversation_id)
+            if history:
+                return history.get_conversation_pairs()
+            return []
+        except Exception as e:
+            print(f"Error getting conversation pairs: {e}")
+            return []
+
+    # ... (rest of the existing methods remain the same)
+    
     def run(self, text: str) -> str:
         """Run the MongoDB Atlas QA system with caching."""
         try:
@@ -548,28 +656,6 @@ class MongoDBAtlasQA:
         except Exception as e:
             print(f"Error running the MongoDB Atlas QA system: {e}")
             return "Error processing your request."
-    
-    def clear_cache(self):
-        """Clear the Redis cache."""
-        if self.cache_manager:
-            self.cache_manager.clear_cache()
-        else:
-            print("No cache manager available")
-    
-    def get_cache_stats(self):
-        """Get cache statistics (if Redis info command is available)."""
-        if self.cache_manager and self.cache_manager.redis_client:
-            try:
-                info = self.cache_manager.redis_client.info()
-                return {
-                    "keyspace_hits": info.get("keyspace_hits", 0),
-                    "keyspace_misses": info.get("keyspace_misses", 0),
-                    "used_memory_human": info.get("used_memory_human", "N/A")
-                }
-            except Exception as e:
-                print(f"Error getting cache stats: {e}")
-                return None
-        return None
 
 
 # Usage examples:
