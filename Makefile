@@ -27,7 +27,7 @@ run_all_tabs:
 	@gnome-terminal --tab --title="DS Service" -- bash -c "cd ML && python3 -m uvicorn server:app --reload; exec bash" &
 
 	@echo "🚀 Launching AI Service..."
-	@gnome-terminal --tab --title="AI Service" -- bash -c "cd AI/stock_market_basics_bot && python3 server.py; exec bash" &
+	@gnome-terminal --tab --title="AI Service" -- bash -c "cd AI/stock_market_basics_bot && source .venv/bin/activate && python3 server.py; exec bash" &
 
 .PHONY: free-ports
 

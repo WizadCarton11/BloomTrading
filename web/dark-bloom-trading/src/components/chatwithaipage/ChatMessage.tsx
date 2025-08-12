@@ -1,26 +1,53 @@
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Bot, User } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
-export const ChatMessage = ({ message }: any) => {
-  const isUser = message.type === 'human';
+export const ChatMessage = ({ message, animate }: { message: any; animate?: boolean }) => {
+  const isUser = message.type === "human";
+
+  const [displayedText, setDisplayedText] = useState(
+    !((!isUser && animate && message.newMessage) ) ? message.data.content : ""
+  );
+
+  // Typing animation for bot messages
+  useEffect(() => {
+    if (!(!isUser && animate && message.newMessage)) return;
+
+    let i = 0;
+    const text = message.data.content;
+    const interval = setInterval(() => {
+      setDisplayedText(text.slice(0, i + 1));
+      i++;
+      if (i >= text.length) {
+        clearInterval(interval);
+      }
+    }, 15); // speed (ms per character)
+
+    return () => clearInterval(interval);
+  }, [message, isUser]);
 
   return (
-    <div className={`flex gap-3 p-4 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+    <div className={`flex gap-3 p-4 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
       <Avatar className="w-8 h-8 shrink-0">
-        <AvatarFallback className={isUser ? 'bg-message-user text-message-user-foreground' : 'bg-message-ai text-message-ai-foreground'}>
+        <AvatarFallback
+          className={
+            isUser
+              ? "bg-message-user text-message-user-foreground"
+              : "bg-message-ai text-message-ai-foreground"
+          }
+        >
           {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
         </AvatarFallback>
       </Avatar>
 
-      <div className={`max-w-[70%] ${isUser ? 'text-right' : 'text-left'}`}>
-        <div 
+      <div className={`max-w-[70%] ${isUser ? "text-right" : "text-left"}`}>
+        <div
           className={`
             inline-block px-4 py-2 rounded-lg shadow-sm whitespace-pre-wrap
             ${isUser 
-              ? 'bg-message-user text-message-user-foreground ml-auto' 
-              : 'bg-message-ai text-message-ai-foreground'
-            }
+              ? "bg-message-user text-message-user-foreground ml-auto" 
+              : "bg-message-ai text-message-ai-foreground"}
           `}
         >
           <ReactMarkdown
@@ -28,22 +55,21 @@ export const ChatMessage = ({ message }: any) => {
               div: ({ node, ...props }) => (
                 <div className="text-sm leading-relaxed" {...props} />
               ),
-              p: ({ node, ...props }) => (
-                <p className="" {...props} />
-              ),
+              p: ({ node, ...props }) => <p className="" {...props} />,
               strong: ({ node, ...props }) => (
-                <li><strong className="font-semibold ml-2" {...props} />
+                <li>
+                  <strong className="font-semibold ml-2" {...props} />
                 </li>
               ),
               h1: ({ node, ...props }) => (
-                <h1 className="text-lg font-bold " {...props} />
+                <h1 className="text-lg font-bold" {...props} />
               ),
               h2: ({ node, ...props }) => (
                 <h2 className="text-base font-bold" {...props} />
-              )
+              ),
             }}
           >
-            {message.data.content}
+            {displayedText}
           </ReactMarkdown>
         </div>
       </div>

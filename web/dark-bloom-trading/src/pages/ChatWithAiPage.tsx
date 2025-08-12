@@ -105,6 +105,7 @@ const ChatInterface = () => {
             data: { content },
             type: 'human',
             timestamp: new Date(),
+            newMessage: true,
           }
         },
       ])
@@ -126,6 +127,7 @@ const ChatInterface = () => {
               data: { content: response.data.response.response},
               type: 'ai',
               timestamp: new Date(),
+              newMessage: true,
             }
           },
         ]);
@@ -147,6 +149,7 @@ const ChatInterface = () => {
               data: { content: response.data.response},
               type: 'ai',
               timestamp: new Date(),
+              newMessage: true,
             }
           },
         ]);
@@ -171,7 +174,25 @@ const ChatInterface = () => {
         }
       });
       console.log("Response:", response.data);
-      setCurrentMessages(response.data.history);
+      // setCurrentMessages(response.data.history);
+      // setCurrentMessages(response.data.history.map((message: any) => ({
+      //   message: {
+      //     id: message.id,
+      //     data: { content: message.message.data.content },
+      //     type: message.messae.type,
+      //     timestamp: new Date(message.createdAt),
+      //     newMessage: false
+      //   }
+      // })));
+      setCurrentMessages((prev)=> response.data.history.map((message: any) => ({
+        message: {
+          id: message.id,
+          data: { content: message.message.data.content },
+          type: message.message.type,
+          timestamp: new Date(message.createdAt),
+          newMessage: false
+        }
+      })));
       setActiveChat(chatId);
         
     } catch (error) {
@@ -273,8 +294,8 @@ const ChatInterface = () => {
                   <EmptyState />
                 ) : (
                   <div className="space-y-1 h-screen">
-                    {currentMessages.map((message) => (
-                      <ChatMessage key={message.message.id} message={message.message} />
+                    {currentMessages.map((message, idx, arr) => (
+                      <ChatMessage key={message.message.id} message={message.message} animate={idx === arr.length - 1} />
                     ))}
                     {isTyping && (
                       <div className="flex gap-3 p-4">

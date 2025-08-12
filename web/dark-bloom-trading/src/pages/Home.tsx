@@ -56,7 +56,7 @@ const Home = () => {
 
             <HeroSection />
             <MarketSnapshot />
-            <PortfolioOverview />
+            {/* <PortfolioOverview /> */}
             <NewsSection />
           </div>
         </main>

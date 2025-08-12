@@ -37,9 +37,15 @@ const mainItems = [
     url: "/portfolio",
     icon: Briefcase,
   },
+  
 ];
 
 const resourcesItems = [
+  {
+    title: "AI Mentor",
+    url: "/resources/ai-mentor",
+    icon: Brain,
+  },
   {
     title: "Bots",
     url: "/resources/bots",
@@ -49,11 +55,6 @@ const resourcesItems = [
     title: "Blogs",
     url: "/resources/blogs",
     icon: Newspaper,
-  },
-  {
-    title: "AI Mentor",
-    url: "/resources/ai-mentor",
-    icon: Brain,
   },
 ];
 

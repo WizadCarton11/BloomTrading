@@ -281,7 +281,7 @@ const SingleStockPage = () => {
     <Bot className="w-5 h-5" />
     Ask AI
   </button> */}
-              <AskAIModal />
+              {/* <AskAIModal /> */}
             </div>
             {/* Company Overview */}
             <Card className="bg-gray-900 border-gray-800 hover:border-purple-800/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-900/20">
